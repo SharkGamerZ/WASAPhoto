@@ -10,6 +10,7 @@ info:
 security:
   - Authorization: []
 
+
 # Components definition
 components:
   # Definition of the Bearer Auth used
@@ -19,22 +20,33 @@ components:
       scheme: bearer
   # Definition of the schemas
   schemas:
+    UserId:
+      description: |
+            Identifies a single user.
+      type: integer
+      minimum: 1
+      example: 15
+      
+    Username: 
+      description: |
+        Username of the user, can be changed
+        It can't contain spaces
+      type: string
+      pattern: '^.*?$'
+      minLength: 3
+      maxLength: 16
+      example: "MarioRossi"
+
+
     # User object
     User:
       title: "User"
       description: "This object represents a single user on WASAPhoto"
       type: object
       properties:
-        username: 
-          description: |
-            Username of the user, can be changed
-            Identifies a single user
-            It can't contain spaces
-          type: string
-          pattern: '^.*?$'
-          minLength: 3
-          maxLength: 16
-          example: "MarioRossi"
+        username: {$ref: "#/components/schemas/Username"}
+        user_id: {$ref: "#/components/parameters/user_id"}
+            
     # Post object
     Post:
       title: "Post"
@@ -49,7 +61,18 @@ components:
           description: "The description of a post"
           type: string
           example: "Me at the zoo"
-          
+  parameters:
+    user_id:
+      name: "user_id"
+      in: path
+      required: true
+      schema:
+        description: |
+              Identifies a single user.
+        type: integer
+        minimum: 1
+        example: 15
+                
         
       
 paths:
@@ -77,8 +100,18 @@ paths:
                     maxLength: 16
         required: true
       responses:
+        "200":
+          description: User log-in succesful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  identifier:
+                    type: string
+                    example: "abcdef012345"
         '201':
-          description: User log-in action successful
+          description: User created and log-in action successful
           content:
             application/json:
               schema:
@@ -88,5 +121,52 @@ paths:
                     type: string
                     example: "abcdef012345"
         
+  # /users:
+  #   get:
+  #     tags: ["user"]
+  #     operationId: getUsers
+  #     summary: "Get all the users in the platform"
+  #     description: |
+  #       Return all the users in WASAPhoto.
+  #       If an username is specified, return all the users that partially or totally match that username.
+  #     parameters:
+  #       - name: username
+  #         in: query
+  #         required: false
+  #         description: "Username for searching users"
+  #         schema:
+  #           type: string
+  #           example: "MarioRossi"
+  #     responses:
+  #       "200":
+  #         description: "List of users"
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: array
+  #               items: { $ref: "#/components/schemas/User"}
+  #       "404":
+  #         description: "User not found"
+
+  /users/{id}:
+    get:
+      tags: ["user"]
+      operationId: getUserProfile
+      summary: Get a specific user
+      description: |
+        Returns the user with the specified ID if it exists.
+      parameters:
+        - {$ref: "#/components/parameters/user_id"}
+      responses:
+        "200":
+          description: User exists. Return user's profile
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/User"}
+        "404":
+          description: User with specified id doesn't exists.
+
+        
       
+
       
