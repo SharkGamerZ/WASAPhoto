@@ -45,7 +45,7 @@ info:
     These are API for the app WASAPhoto, the application for the 
     2023/24 WASA Course.
   title: WASAPhoto
-  version: 1.0.1
+  version: 1.0.2
 
 # Global application of the bearer authorization 
 security:
