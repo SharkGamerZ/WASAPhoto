@@ -18,8 +18,8 @@
 # - [x] uncommentPhoto
 # 
 #
-#
-#
+#   Aggiunto Server
+#   Corrette alcune risposte
 #
 #
 
@@ -51,6 +51,10 @@ info:
 security:
   - Authorization: []
 
+# Server
+servers:
+  - url: http://localhost:8080
+    description: Local server
 
 # Components definition
 components:
@@ -115,7 +119,6 @@ components:
       format: byte
       minLength: 0
       maxLength: 100000000
-
     #-------------Comment related-------------
     CommentId:
       description: "Identifies a single comment"
@@ -133,7 +136,6 @@ components:
       pattern: "^[a-zA-Z0-9\\s\\S]*$"
 
     #--------------------------Objects--------------------------#
-
     # User object
     User:
       title: "User"
@@ -162,6 +164,7 @@ components:
       properties:
         id: {$ref: "#/components/schemas/CommentId"}
         description: {$ref: "#/components/schemas/CommentBody"}
+
   #-------------------------- Definition of the parameters --------------------------#
   parameters:
     user_id:
@@ -184,7 +187,18 @@ components:
       in: path
       required: true
       description: Id of a single comment, used to identify a specific comment.
-     
+  #-------------------------- Definition of the responses --------------------------#
+  responses:
+    NotFound:
+      description: Resource was not found
+      content:
+        text/plain:
+          schema: 
+            type: string  
+            description: The error
+            minLength: 0
+            maxLength: 512
+            pattern: "^[a-zA-Z0-9\\s\\S]*$"
                 
         
       
@@ -264,8 +278,7 @@ paths:
                     minItems: 1
                     maxItems: 9999
                     description: Array of users   
-        "404":
-          description: "User not found"
+        "404": {$ref: "#/components/responses/NotFound"}
 
   /users/{user_id}:
     parameters:
@@ -282,8 +295,7 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/User"}
-        "404":
-          description: User with specified id doesn't exists.
+        "404": {$ref: "#/components/responses/NotFound"}
 
 
   /users/{user_id}/username:
@@ -306,8 +318,7 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/User"}
-        "404":
-          description: User with specified id doesn't exists.
+        "404": {$ref: "#/components/responses/NotFound"}
 
   /users/{user_id}/stream:
     parameters:
@@ -335,6 +346,12 @@ paths:
                     maxItems: 9999
         "401":
           description: Unauthorized.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: This is not the stream of your profile
 
 
 
@@ -363,8 +380,7 @@ paths:
                     description: Array of users 
                     minItems: 0
                     maxItems: 999999999
-        "404":
-          description: User with specified ID doesn't exists.
+        "404": {$ref: "#/components/responses/NotFound"}
 
   /users/{user_id}/following/{followed_user_id}:
     parameters:
@@ -383,8 +399,13 @@ paths:
       responses:
         "200":
           description: User followed
-        "404":
-          description: User doesn't exists
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: User mariorossi followed
+        "404": {$ref: "#/components/responses/NotFound"}
     delete:
       tags: ["user following"]
       operationId: unfollowUser
@@ -395,8 +416,13 @@ paths:
       responses:
         "200":
           description: User unfollowed
-        "404":
-          description: User is not followed
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: User mariorossi unfollowed
+        "404": {$ref: "#/components/responses/NotFound"}
 
 
 
@@ -426,8 +452,7 @@ paths:
                     description: Array of users
                     minItems: 0
                     maxItems: 999999999
-        "404":
-          description: User with specified ID doesn't exists.
+        "404": {$ref: "#/components/responses/NotFound"}
 
   /users/{user_id}/banned/{banned_user_id}:
     parameters:
@@ -446,8 +471,13 @@ paths:
       responses:
         "200":
           description: User banned
-        "404":
-          description: User doesn't exists
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: User mariorossi was banned
+        "404": {$ref: "#/components/responses/NotFound"}
     delete:
       tags: ["user bans"]
       operationId: unbanUser
@@ -458,8 +488,13 @@ paths:
       responses:
         "200":
           description: User unbanned
-        "404":
-          description: User is not banned
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: User mariorossi was unbanned
+        "404": {$ref: "#/components/responses/NotFound"}
 
 
 
@@ -491,8 +526,7 @@ paths:
                     description: Array of posts
                     minItems: 0
                     maxItems: 99999
-        "404":
-          description: User with specified id doesn't exists.
+        "404": {$ref: "#/components/responses/NotFound"}
     post:
       tags: ["post"]
       operationId: uploadPhoto
@@ -506,6 +540,12 @@ paths:
       responses:
         "201":
           description: Post published.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: Post was published
             
 
   /users/{user_id}/posts/{post_id}:
@@ -524,8 +564,7 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/Post"}   
-        "404":
-          description: User or post not found
+        "404": {$ref: "#/components/responses/NotFound"}
     delete:
       tags: ["post"]
       operationId: deletePhoto
@@ -536,8 +575,13 @@ paths:
       responses:
         "200":
           description: Photo deleted.
-        "404":
-          description: User or post not found
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: Photo with id 294829 was deleted
+        "404": {$ref: "#/components/responses/NotFound"}
 
         
 
@@ -566,8 +610,7 @@ paths:
                     description: Array of users
                     minItems: 0
                     maxItems: 999999999
-        "404":
-          description: Photo not found
+        "404": {$ref: "#/components/responses/NotFound"}
 
 
   /users/{user_id}/posts/{post_id}/likes/{user_like_id}:
@@ -587,10 +630,21 @@ paths:
       responses:
         "201":
           description: Photo liked.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: Post with id 9284929 was liked
         "400":
           description: Photo already liked.
-        "404":
-          description: Photo not found
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: Post with id 9284929 is already liked
+        "404": {$ref: "#/components/responses/NotFound"}
     delete:
       tags: ["post like"]
       operationId: unlikePhoto
@@ -599,10 +653,21 @@ paths:
       responses:
         "200":
           description: Photo unliked.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: Post with id 9284929 was unliked
         "400":
           description: Photo already unliked.
-        "404":
-          description: Photo not found
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: Post with id 9284929 is already unliked
+        "404": {$ref: "#/components/responses/NotFound"}
 
 
 
@@ -633,8 +698,8 @@ paths:
                     description: Array of comments
                     minItems: 0
                     maxItems: 999999
-        "404":
-          description: Photo not found.
+        "404": {$ref: "#/components/responses/NotFound"}
+          
     post:
       operationId: commentPhoto
       tags: ["post comment"]
@@ -650,8 +715,13 @@ paths:
       responses:
         "201":
           description: Photo commented.
-        "404":
-          description: Photo not found.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: Post with id 2402029 was commented
+        "404": {$ref: "#/components/responses/NotFound"}
 
   /users/{user_id}/posts/{post_id}/comments/{comment_id}:
     parameters:
@@ -668,8 +738,18 @@ paths:
       responses:
         "200":
           description: Comment deleted.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: The comment with id 389282 was deleted
         "401":
           description: Unauthorized.
-        "404":
-          description: Comment not found
-        
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: The comment with id 299482 is not yours
+        "404": {$ref: "#/components/responses/NotFound"}
