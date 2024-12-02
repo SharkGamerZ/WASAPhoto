@@ -1,4 +1,4 @@
-# TODO: 
+# TODO:
 # - [x] doLogin (see simplified login)
 #   - [x] getUsers
 # - [x] setMyUserName
@@ -16,7 +16,7 @@
 # - [x] unlikePhoto
 # - [x] commentPhoto
 # - [x] uncommentPhoto
-# 
+#
 #
 #   Aggiunto Server
 #   Corrette alcune risposte
@@ -40,14 +40,14 @@ tags:
     description: "Everything about your posts' comments"
 
 openapi: 3.0.1
-info: 
-  description: | 
-    These are API for the app WASAPhoto, the application for the 
+info:
+  description: |
+    These are API for the app WASAPhoto, the application for the
     2023/24 WASA Course.
   title: WASAPhoto
   version: 1.0.2
 
-# Global application of the bearer authorization 
+# Global application of the bearer authorization
 security:
   - Authorization: []
 
@@ -75,8 +75,8 @@ components:
       minimum: 1
       example: 15
       readOnly: true
-      
-    Username: 
+
+    Username:
       description: |
         Username of the user, can be changed
         It can't contain spaces
@@ -145,7 +145,7 @@ components:
         username: {$ref: "#/components/schemas/Username"}
         user_id: {$ref: "#/components/schemas/UserId"}
         bio: {$ref: "#/components/schemas/Bio"}
-            
+
     # Post object
     Post:
       title: "Post"
@@ -193,15 +193,15 @@ components:
       description: Resource was not found
       content:
         text/plain:
-          schema: 
-            type: string  
+          schema:
+            type: string
             description: The error
             minLength: 0
             maxLength: 512
             pattern: "^[a-zA-Z0-9\\s\\S]*$"
-                
-        
-      
+
+
+
 paths:
   /session:
     post:
@@ -213,7 +213,7 @@ paths:
         If the user exists, the user identifier is returned.
       operationId: doLogin
       security: []
-      requestBody: 
+      requestBody:
         description: User details
         content:
           application/json:
@@ -247,8 +247,8 @@ paths:
                   identifier:
                     type: string
                     description: identifier of a user
-                    example: "abcdef012345"  
-  
+                    example: "abcdef012345"
+
   /users:
     parameters:
         - name: username
@@ -277,7 +277,7 @@ paths:
                     items: { $ref: "#/components/schemas/User"}
                     minItems: 1
                     maxItems: 9999
-                    description: Array of users   
+                    description: Array of users
         "404": {$ref: "#/components/responses/NotFound"}
 
   /users/{user_id}:
@@ -377,7 +377,7 @@ paths:
                   following:
                     type: array
                     items: { $ref: "#/components/schemas/User"}
-                    description: Array of users 
+                    description: Array of users
                     minItems: 0
                     maxItems: 999999999
         "404": {$ref: "#/components/responses/NotFound"}
@@ -516,7 +516,7 @@ paths:
           description: Return user's posts.
           content:
             application/json:
-              schema: 
+              schema:
                 type: object
                 description: Array of posts of the user
                 properties:
@@ -546,7 +546,7 @@ paths:
                 type: string
                 description: Response string
                 example: Post was published
-            
+
 
   /users/{user_id}/posts/{post_id}:
     parameters:
@@ -563,7 +563,7 @@ paths:
           description: Return post.
           content:
             application/json:
-              schema: {$ref: "#/components/schemas/Post"}   
+              schema: {$ref: "#/components/schemas/Post"}
         "404": {$ref: "#/components/responses/NotFound"}
     delete:
       tags: ["post"]
@@ -583,7 +583,7 @@ paths:
                 example: Photo with id 294829 was deleted
         "404": {$ref: "#/components/responses/NotFound"}
 
-        
+
 
   /users/{user_id}/posts/{post_id}/likes:
     parameters:
@@ -600,7 +600,7 @@ paths:
           description: Return users.
           content:
             application/json:
-              schema: 
+              schema:
                 type: object
                 description: Array of users that liked the photo
                 properties:
@@ -688,7 +688,7 @@ paths:
           description: Return comments.
           content:
             application/json:
-              schema: 
+              schema:
                 type: object
                 description: Array of comments of the post
                 properties:
@@ -699,7 +699,7 @@ paths:
                     minItems: 0
                     maxItems: 999999
         "404": {$ref: "#/components/responses/NotFound"}
-          
+
     post:
       operationId: commentPhoto
       tags: ["post comment"]
