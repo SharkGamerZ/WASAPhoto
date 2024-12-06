@@ -296,6 +296,19 @@ paths:
             application/json:
               schema: {$ref: "#/components/schemas/User"}
         "404": {$ref: "#/components/responses/NotFound"}
+    delete:
+      tags: ["user"]
+      operationId: deleteUser
+      summary: Deletes a user
+      description: |
+        If the specific user with "user_id" ID calls this, he deletes his profile.
+      responses:
+        "200":
+          description: User deleted
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/User"}
+        "404": {$ref: "#/components/responses/NotFound"}
 
 
   /users/{user_id}/username:
