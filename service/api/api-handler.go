@@ -13,5 +13,9 @@ func (rt *_router) Handler() http.Handler {
 	// Special routes
 	rt.router.GET("/liveness", rt.liveness)
 
+	// Post Routes
+	rt.router.POST("/session", rt.doLogin)
+	// rt.router.POST("/photos", rt.wrap(rt.createPhoto))
+
 	return rt.router
 }
