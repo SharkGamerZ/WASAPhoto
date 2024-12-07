@@ -17,5 +17,8 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.POST("/session", rt.wrap(rt.doLogin))
 	// rt.router.POST("/photos", rt.wrap(rt.createPhoto))
 
+	// Delete Routes
+	rt.router.DELETE("/users/{user_id}", rt.wrap(rt.deleteUser))
+
 	return rt.router
 }

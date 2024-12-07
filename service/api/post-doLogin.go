@@ -30,7 +30,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// Checks if user exists
-	userExists, err := rt.db.CheckUser(user.Username)
+	userExists, err := rt.db.ExistsName(user.Username)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -41,11 +41,19 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		w.WriteHeader(http.StatusCreated)
 
 		// Create user
-		err = rt.db.CreateUser(user)
+		var id int
+		id, err = rt.db.CreateUser(user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		// Return the ID of the user
+		json.NewEncoder(w).Encode(struct {
+			ID int `json:"id"`
+		}{
+			ID: id,
+		})
 	} else {
 		// If user exists, return OK
 		w.WriteHeader(http.StatusOK)

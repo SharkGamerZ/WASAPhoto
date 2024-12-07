@@ -41,8 +41,9 @@ import (
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
 	// User
-	CheckUser(username string) (bool, error)
-	CreateUser(_struct.User) error
+	ExistsName(username string) (bool, error)
+	CreateUser(_struct.User) (int, error)
+	DeleteUser(UserID int) error
 
 	Ping() error
 }
@@ -63,7 +64,8 @@ func New(db *sql.DB) (AppDatabase, error) {
 	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='USERS';`).Scan(&tableName)
 	if errors.Is(err, sql.ErrNoRows) {
 		createUsersTableQuery := `CREATE TABLE USERS (id INTEGER NOT NULL PRIMARY KEY,
-													username TEXT);`
+													username TEXT
+													bio TEXT);`
 		_, err = db.Exec(createUsersTableQuery)
 		if err != nil {
 			return nil, fmt.Errorf("error creating database structure: %w", err)
