@@ -10,26 +10,27 @@ import (
 // - [x] getUsers
 // - [x] getUserProfile
 // - [x] deleteUser
-// - [ ] setMyUserName
+// - [x] setMyUserName
 // - [ ] getMyStream
-
+// -----------------
 // - [ ] uploadPhoto
 // - [ ] getPhotoById
 // - [ ] getUserPhotos
 // - [ ] deletePhoto
-
+// -----------------
 // - [ ] followUser
 // - [ ] unfollowUser
 // - [ ] getFollowing
-
+// -----------------
 // - [ ] banUser
+// -----------------
 // - [ ] unbanUser
 // - [ ] getBanned
-
+// -----------------
 // - [ ] likePhoto
 // - [ ] unlikePhoto
 // - [ ] getLikes
-
+// -----------------
 // - [ ] commentPhoto
 // - [ ] uncommentPhoto
 // - [ ] getComments

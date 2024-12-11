@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/SharkGamerZ/WASAPhoto/service/api/reqcontext"
@@ -14,8 +13,7 @@ func (rt *_router) GetUsers(w http.ResponseWriter, r *http.Request, ps httproute
 	// Checks if a usernames is passed
 	username := r.URL.Query().Get("username")
 
-	// If a username is passed, gets the specifc user
-	fmt.Println("User:" + username + ".")
+	// If a username is passed, gets the specific user
 	if username != "" {
 		// Get the user by username
 		user, err := rt.db.GetUserByUsername(username)
