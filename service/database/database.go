@@ -42,8 +42,14 @@ import (
 type AppDatabase interface {
 	// User
 	ExistsName(username string) (bool, error)
+	GetUserById(userID int) (_struct.User, error)
+	GetUserByUsername(username string) (_struct.User, error)
+	GetUsers() ([]_struct.User, error)
+
 	CreateUser(_struct.User) (int, error)
 	DeleteUser(UserID int) error
+
+	UpdateUsername(UserID int, username string) error
 
 	Ping() error
 }
