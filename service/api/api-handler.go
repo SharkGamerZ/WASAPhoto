@@ -46,13 +46,15 @@ func (rt *_router) Handler() http.Handler {
 	// Get Routes
 	rt.router.GET("/users", rt.wrap(rt.GetUsers))
 	rt.router.GET("/users/:id", rt.wrap(rt.GetUserProfile))
+	rt.router.GET("/users/:id/following", rt.wrap(rt.getFollowers))
 
 	// Post Routes
 	rt.router.POST("/session", rt.wrap(rt.doLogin))
 	// rt.router.POST("/photos", rt.wrap(rt.createPhoto))
 
 	// Put Routes
-	rt.router.PUT("/users/:id/username", rt.wrap(rt.setMyUserName))
+	rt.router.PUT("/users/:id/", rt.wrap(rt.setMyUserName))
+	rt.router.PUT("/users/:id/following/:id2", rt.wrap(rt.followUser))
 
 	// Delete Routes
 	rt.router.DELETE("/users/:id", rt.wrap(rt.deleteUser))

@@ -51,6 +51,10 @@ type AppDatabase interface {
 
 	UpdateUsername(UserID int, username string) error
 
+	// Follows
+	FollowUser(userID int, username string) error
+	UnfollowUser(userID int, username string) error
+	GetFollowers(userID int) ([]_struct.User, error)
 	Ping() error
 }
 
@@ -76,6 +80,13 @@ func New(db *sql.DB) (AppDatabase, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error creating database structure: %w", err)
 		}
+
+		createFollowersTableQuery := `CREATE TABLE FOLLOWERS (
+													followed INTEGER references USERS(id),
+													following INTEGER references USERS(id),
+													PRIMARY KEY (followed, following));`
+		_, err = db.Exec(createFollowersTableQuery)
+
 	}
 
 	return &appdbimpl{
