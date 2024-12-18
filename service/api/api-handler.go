@@ -53,7 +53,7 @@ func (rt *_router) Handler() http.Handler {
 	// rt.router.POST("/photos", rt.wrap(rt.createPhoto))
 
 	// Put Routes
-	rt.router.PUT("/users/:id/", rt.wrap(rt.setMyUserName))
+	rt.router.PUT("/users/:id/username", rt.wrap(rt.setMyUserName))
 	rt.router.PUT("/users/:id/following/:id2", rt.wrap(rt.followUser))
 
 	// Delete Routes
