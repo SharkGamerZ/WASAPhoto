@@ -3,25 +3,20 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/SharkGamerZ/WASAPhoto/service/api/reqcontext"
-	"github.com/SharkGamerZ/WASAPhoto/service/struct"
 	"github.com/julienschmidt/httprouter"
 )
 
-func (rt *_router) getFollowers(w http.ResponseWriter, r *http.Request, _ httprouter.Params, ctx reqcontext.RequestContext) {
+func (rt *_router) getFollowings(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-type", "application/json")
 
-	// Gets the user from the request body
-	var user _struct.User
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	// Gets the id of the user
+	userID, err := strconv.Atoi(ps.ByName("id"))
 
 	// Gets the followers of the user
-	followers, err := rt.db.GetFollowers(user.UserID)
+	followers, err := rt.db.GetFollowings(userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

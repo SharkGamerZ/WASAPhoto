@@ -1,19 +1,38 @@
 package database
 
-import _struct "github.com/SharkGamerZ/WASAPhoto/service/struct"
+import (
+	"database/sql"
 
-func (db *appdbimpl) FollowUser(userID int, username string) error {
-	_, err := db.c.Exec("INSERT INTO FOLLOWS (follower_id, followed_id) VALUES (?, ?)", userID, username)
+	_struct "github.com/SharkGamerZ/WASAPhoto/service/struct"
+)
+
+func (db *appdbimpl) FollowUser(follower int, followed int) error {
+	// Checks if the user is already following the user
+	_, err := db.c.Exec("SELECT * FROM FOLLOWERS WHERE follower_id = ? AND followed_id = ?", follower, followed)
+	if err == sql.ErrNoRows {
+		return err
+	}
+
+	// If not, follow the user
+	query := "INSERT INTO FOLLOWERS (follower_id, followed_id) VALUES (?, ?)"
+	_, err = db.c.Exec(query, follower, followed)
 	return err
 }
 
-func (db *appdbimpl) UnfollowUser(userID int, username string) error {
-	_, err := db.c.Exec("DELETE FROM FOLLOWS WHERE follower_id = ? AND followed_id = ?", userID, username)
+func (db *appdbimpl) UnfollowUser(follower int, followed int) error {
+	// Checks if the user is already following the user
+	_, err := db.c.Exec("SELECT * FROM FOLLOWERS WHERE follower_id = ? AND followed_id = ?", follower, followed)
+	if err == sql.ErrNoRows {
+		return err
+	}
+
+	_, err = db.c.Exec("DELETE FROM FOLLOWERS WHERE follower_id = ? AND followed_id = ?", follower, followed)
+
 	return err
 }
 
-func (db *appdbimpl) GetFollowers(userID int) ([]_struct.User, error) {
-	rows, err := db.c.Query("SELECT followed_id FROM FOLLOWS WHERE follower_id = ?", userID)
+func (db *appdbimpl) GetFollowings(userID int) ([]_struct.User, error) {
+	rows, err := db.c.Query("SELECT followed_id, username FROM FOLLOWERS, USERS WHERE follower_id = ? AND followed_id = id", userID)
 	if err != nil {
 		return nil, err
 	}
@@ -22,7 +41,7 @@ func (db *appdbimpl) GetFollowers(userID int) ([]_struct.User, error) {
 	var users []_struct.User
 	for rows.Next() {
 		var user _struct.User
-		err = rows.Scan(&user.Username)
+		err = rows.Scan(&user.UserID, &user.Username)
 		if err != nil {
 			return nil, err
 		}

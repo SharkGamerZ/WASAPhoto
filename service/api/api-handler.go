@@ -18,9 +18,9 @@ import (
 // - [ ] getUserPhotos
 // - [ ] deletePhoto
 // -----------------
-// - [ ] followUser
+// - [x] followUser
 // - [ ] unfollowUser
-// - [ ] getFollowing
+// - [x] getFollowing
 // -----------------
 // - [ ] banUser
 // -----------------
@@ -46,7 +46,7 @@ func (rt *_router) Handler() http.Handler {
 	// Get Routes
 	rt.router.GET("/users", rt.wrap(rt.GetUsers))
 	rt.router.GET("/users/:id", rt.wrap(rt.GetUserProfile))
-	rt.router.GET("/users/:id/following", rt.wrap(rt.getFollowers))
+	rt.router.GET("/users/:id/following", rt.wrap(rt.getFollowings))
 
 	// Post Routes
 	rt.router.POST("/session", rt.wrap(rt.doLogin))
@@ -58,6 +58,7 @@ func (rt *_router) Handler() http.Handler {
 
 	// Delete Routes
 	rt.router.DELETE("/users/:id", rt.wrap(rt.deleteUser))
+	rt.router.DELETE("/users/:id/following/:id2", rt.wrap(rt.unfollowUser))
 
 	return rt.router
 }

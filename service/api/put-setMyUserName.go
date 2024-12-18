@@ -8,7 +8,6 @@ import (
 	// "fmt"
 
 	"github.com/SharkGamerZ/WASAPhoto/service/api/reqcontext"
-	"github.com/SharkGamerZ/WASAPhoto/service/utils"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -28,13 +27,13 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	// Checks if the username is valid
-	if isValidUsername(username) {
+	if !isValidUsername(username) {
 		http.Error(w, "Invalid username", http.StatusBadRequest)
 		return
 	}
 
 	// Checks if user exists
-	userExists, err := rt.db.ExistsName(user.Username)
+	userExists, err := rt.db.ExistsName(username)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -45,6 +44,6 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	// Updates the user's username
-	err = rt.db.UpdateUsername(userID, user.Username)
+	err = rt.db.UpdateUsername(userID, username)
 
 }

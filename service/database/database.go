@@ -52,9 +52,9 @@ type AppDatabase interface {
 	UpdateUsername(UserID int, username string) error
 
 	// Follows
-	FollowUser(userID int, username string) error
+	FollowUser(follower int, followed int) error
 	UnfollowUser(userID int, username string) error
-	GetFollowers(userID int) ([]_struct.User, error)
+	GetFollowings(userID int) ([]_struct.User, error)
 	Ping() error
 }
 
@@ -69,24 +69,31 @@ func New(db *sql.DB) (AppDatabase, error) {
 		return nil, errors.New("database is required when building a AppDatabase")
 	}
 
+	// fmt.Println("Deleting database")
+	// DeleteDatabase(db)
+
 	// Check if table exists. If not, the database is empty, and we need to create the structure
 	var tableName string
 	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='USERS';`).Scan(&tableName)
 	if errors.Is(err, sql.ErrNoRows) {
+		fmt.Println("Creating database structure")
 		createUsersTableQuery := `CREATE TABLE USERS (id INTEGER NOT NULL PRIMARY KEY,
 													username TEXT
-													bio TEXT);`
+													bio TEXT
+													propic TEXT);`
 		_, err = db.Exec(createUsersTableQuery)
 		if err != nil {
 			return nil, fmt.Errorf("error creating database structure: %w", err)
 		}
 
 		createFollowersTableQuery := `CREATE TABLE FOLLOWERS (
-													followed INTEGER references USERS(id),
-													following INTEGER references USERS(id),
-													PRIMARY KEY (followed, following));`
+													followed_id INTEGER references USERS(id),
+													follower_id INTEGER references USERS(id),
+													PRIMARY KEY (followed_id, follower_id));`
 		_, err = db.Exec(createFollowersTableQuery)
-
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
 	}
 
 	return &appdbimpl{
@@ -96,4 +103,17 @@ func New(db *sql.DB) (AppDatabase, error) {
 
 func (db *appdbimpl) Ping() error {
 	return db.c.Ping()
+}
+
+// Deletes the database
+func DeleteDatabase(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE USERS")
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("DROP TABLE FOLLOWERS")
+	if err != nil {
+		return err
+	}
+	return nil
 }
