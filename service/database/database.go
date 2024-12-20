@@ -53,7 +53,7 @@ type AppDatabase interface {
 
 	// Follows
 	FollowUser(follower int, followed int) error
-	UnfollowUser(userID int, username string) error
+	UnfollowUser(follower int, followed int) error
 	GetFollowings(userID int) ([]_struct.User, error)
 	Ping() error
 }
