@@ -49,11 +49,16 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		}
 
 		// Return the ID of the user
-		json.NewEncoder(w).Encode(struct {
+		err = json.NewEncoder(w).Encode(struct {
 			ID int `json:"id"`
 		}{
 			ID: id,
 		})
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	} else {
 		// If user exists, return OK
 		w.WriteHeader(http.StatusOK)

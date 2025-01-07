@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -23,7 +24,7 @@ func (rt *_router) deleteUser(w http.ResponseWriter, r *http.Request, ps httprou
 
 	// Checks if user exists
 	_, err = rt.db.GetUserById(userID)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}

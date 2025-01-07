@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 
 	_struct "github.com/SharkGamerZ/WASAPhoto/service/struct"
 )
@@ -9,7 +10,7 @@ import (
 func (db *appdbimpl) FollowUser(follower int, followed int) error {
 	// Checks if the user is already following the user
 	_, err := db.c.Exec("SELECT * FROM FOLLOWERS WHERE follower_id = ? AND followed_id = ?", follower, followed)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
 
@@ -22,7 +23,7 @@ func (db *appdbimpl) FollowUser(follower int, followed int) error {
 func (db *appdbimpl) UnfollowUser(follower int, followed int) error {
 	// Checks if the user is already following the user
 	_, err := db.c.Exec("SELECT * FROM FOLLOWERS WHERE follower_id = ? AND followed_id = ?", follower, followed)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
 

@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -20,7 +21,7 @@ func (rt *_router) GetUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	user, err := rt.db.GetUserById(userIDInt)
 
 	// If user doesn't exist
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "User does not exist", http.StatusNotFound)
 		return
 	}
@@ -31,5 +32,9 @@ func (rt *_router) GetUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 
 	// Send the user
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

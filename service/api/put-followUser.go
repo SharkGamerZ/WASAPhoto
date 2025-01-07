@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -18,7 +19,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 
 	// Checks if user exists
 	_, err = rt.db.GetUserById(followed)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "User does not exist", http.StatusNotFound)
 	}
 	if err != nil {
@@ -28,7 +29,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 
 	// Follows the user
 	err = rt.db.FollowUser(follower, followed)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "User is already following the user", http.StatusConflict)
 	}
 	if err != nil {

@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -18,7 +19,10 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 
 	// Unfollows the user
 	err = rt.db.UnfollowUser(follower, followed)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
