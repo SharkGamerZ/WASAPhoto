@@ -17,6 +17,10 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 
 	// Gets the id of the user
 	userID, err := strconv.Atoi(ps.ByName("id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	// Gets the user from the request body
 	var username string
@@ -45,5 +49,8 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 
 	// Updates the user's username
 	err = rt.db.UpdateUsername(userID, username)
-
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

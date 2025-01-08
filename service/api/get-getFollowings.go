@@ -14,6 +14,10 @@ func (rt *_router) getFollowings(w http.ResponseWriter, r *http.Request, ps http
 
 	// Gets the id of the user
 	userID, err := strconv.Atoi(ps.ByName("id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	// Gets the followers of the user
 	followers, err := rt.db.GetFollowings(userID)

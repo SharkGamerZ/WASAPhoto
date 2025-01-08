@@ -15,7 +15,16 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 
 	// Gets the id of the user
 	follower, err := strconv.Atoi(ps.ByName("id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	followed, err := strconv.Atoi(ps.ByName("id2"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	// Checks if user exists
 	_, err = rt.db.GetUserById(followed)

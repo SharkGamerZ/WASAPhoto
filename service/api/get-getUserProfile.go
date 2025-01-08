@@ -18,6 +18,11 @@ func (rt *_router) GetUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 
 	// Convert the user id to an int
 	userIDInt, err := strconv.Atoi(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	user, err := rt.db.GetUserById(userIDInt)
 
 	// If user doesn't exist

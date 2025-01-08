@@ -51,6 +51,9 @@ func (db *appdbimpl) GetUsers() ([]_struct.User, error) {
 // Create a new user in the database
 func (db *appdbimpl) CreateUser(user _struct.User) (int, error) {
 	_, err := db.c.Exec("INSERT INTO USERS (username) VALUES (?)", user.Username)
+	if err != nil {
+		return 0, err
+	}
 
 	// Gets the ID of the user
 	var id int

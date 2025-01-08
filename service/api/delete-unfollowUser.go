@@ -15,7 +15,16 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 
 	// Gets the id of the users
 	follower, err := strconv.Atoi(ps.ByName("id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	followed, err := strconv.Atoi(ps.ByName("id2"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	// Unfollows the user
 	err = rt.db.UnfollowUser(follower, followed)
@@ -30,5 +39,9 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	// Sends the response
-	w.Write([]byte(`{"success":true}`))
+	_, err = w.Write([]byte(`{"success":true}`))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
