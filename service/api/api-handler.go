@@ -36,29 +36,24 @@ import (
 // - [ ] getComments
 // Handler returns an instance of httprouter.Router that handle APIs registered here
 func (rt *_router) Handler() http.Handler {
-	// Register routes
-	rt.router.GET("/", rt.getHelloWorld)
-	rt.router.GET("/context", rt.wrap(rt.getContextReply))
-
-	// Special routes
-	rt.router.GET("/liveness", rt.liveness)
+	// Session
+	rt.router.POST("/session", rt.wrap(rt.doLogin, false))
 
 	// Get Routes
-	rt.router.GET("/users", rt.wrap(rt.GetUsers))
-	rt.router.GET("/users/:id", rt.wrap(rt.GetUserProfile))
-	rt.router.GET("/users/:id/following", rt.wrap(rt.getFollowings))
+	rt.router.GET("/users", rt.wrap(rt.GetUsers, true))
+	rt.router.GET("/users/:id", rt.wrap(rt.GetUserProfile, true))
+	rt.router.GET("/users/:id/following", rt.wrap(rt.getFollowings, true))
 
 	// Post Routes
-	rt.router.POST("/session", rt.wrap(rt.doLogin))
 	// rt.router.POST("/photos", rt.wrap(rt.createPhoto))
 
 	// Put Routes
-	rt.router.PUT("/users/:id/username", rt.wrap(rt.setMyUserName))
-	rt.router.PUT("/users/:id/following/:id2", rt.wrap(rt.followUser))
+	rt.router.PUT("/users/:id/username", rt.wrap(rt.setMyUserName, true))
+	rt.router.PUT("/users/:id/following/:id2", rt.wrap(rt.followUser, true))
 
 	// Delete Routes
-	rt.router.DELETE("/users/:id", rt.wrap(rt.deleteUser))
-	rt.router.DELETE("/users/:id/following/:id2", rt.wrap(rt.unfollowUser))
+	rt.router.DELETE("/users/:id", rt.wrap(rt.deleteUser, true))
+	rt.router.DELETE("/users/:id/following/:id2", rt.wrap(rt.unfollowUser, true))
 
 	return rt.router
 }

@@ -76,7 +76,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 	var tableName string
 	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='USERS';`).Scan(&tableName)
 	if errors.Is(err, sql.ErrNoRows) {
-		fmt.Println("Creating database structure")
+		// fmt.Println("Creating database structure")
 		createUsersTableQuery := `CREATE TABLE USERS (id INTEGER NOT NULL PRIMARY KEY,
 													username TEXT
 													bio TEXT
