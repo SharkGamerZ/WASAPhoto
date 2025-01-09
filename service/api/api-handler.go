@@ -19,13 +19,12 @@ import (
 // - [ ] deletePhoto
 // -----------------
 // - [x] followUser
-// - [ ] unfollowUser
+// - [x] unfollowUser
 // - [x] getFollowing
 // -----------------
-// - [ ] banUser
-// -----------------
-// - [ ] unbanUser
-// - [ ] getBanned
+// - [x] banUser
+// - [x] unbanUser
+// - [x] getBanneds
 // -----------------
 // - [ ] likePhoto
 // - [ ] unlikePhoto
@@ -43,6 +42,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/users", rt.wrap(rt.GetUsers, true))
 	rt.router.GET("/users/:id", rt.wrap(rt.GetUserProfile, true))
 	rt.router.GET("/users/:id/following", rt.wrap(rt.getFollowings, true))
+	rt.router.GET("/users/:id/bans", rt.wrap(rt.getBanneds, true))
 
 	// Post Routes
 	// rt.router.POST("/photos", rt.wrap(rt.createPhoto))
@@ -50,10 +50,12 @@ func (rt *_router) Handler() http.Handler {
 	// Put Routes
 	rt.router.PUT("/users/:id/username", rt.wrap(rt.setMyUserName, true))
 	rt.router.PUT("/users/:id/following/:id2", rt.wrap(rt.followUser, true))
+	rt.router.PUT("/users/:id/bans/:id2", rt.wrap(rt.banUser, true))
 
 	// Delete Routes
 	rt.router.DELETE("/users/:id", rt.wrap(rt.deleteUser, true))
 	rt.router.DELETE("/users/:id/following/:id2", rt.wrap(rt.unfollowUser, true))
+	rt.router.DELETE("/users/:id/bans/:id2", rt.wrap(rt.unbanUser, true))
 
 	return rt.router
 }
