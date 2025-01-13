@@ -24,12 +24,25 @@ func (rt *_router) wrap(fn httpRouterHandler, auth bool) func(http.ResponseWrite
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		// Configura gli header CORS
+		w.Header().Set("Access-Control-Allow-Origin", "*") // Specifica l'origine in produzione
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
+		// Gestisci le richieste preflight
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		// Authorization check
 		userID := 0
 		if auth {
 			// Check if the user is authorized
+			rt.baseLogger.Info("Checking authorization")
+			rt.baseLogger.Info(r.Header.Get("Authorization"))
 			userID = getAuthToken(r.Header)
-
+			rt.baseLogger.Info(userID)
 			if userID == 0 {
 				http.Error(w, "User not authorized", http.StatusUnauthorized)
 				return
@@ -38,6 +51,7 @@ func (rt *_router) wrap(fn httpRouterHandler, auth bool) func(http.ResponseWrite
 
 		var ctx = reqcontext.RequestContext{
 			ReqUUID: reqUUID,
+			UserID:  userID,
 		}
 
 		// Create a request-specific logger
@@ -52,9 +66,13 @@ func (rt *_router) wrap(fn httpRouterHandler, auth bool) func(http.ResponseWrite
 }
 
 func getAuthToken(header http.Header) int {
-	token, err := strconv.Atoi(header.Get("Authorization"))
+	// The string is formatted as "Bearer <token>"
+	token := header.Get("Authorization")
+
+	// Gets only the number from the header
+	userID, err := strconv.Atoi(token[7:])
 	if err != nil {
 		return 0
 	}
-	return token
+	return userID
 }
