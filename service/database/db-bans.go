@@ -1,33 +1,46 @@
 package database
 
 import (
+	"database/sql"
+	"errors"
+
 	_struct "github.com/SharkGamerZ/WASAPhoto/service/struct"
 )
 
 // BanUser bans a user from another user
 func (db *appdbimpl) BanUser(banner int, banned int) error {
 	// Checks if the user is already banned
-	_, err := db.c.Exec("SELECT * FROM BANS WHERE banner_id = ? AND banned_id = ?", banner, banned)
-	if err != nil {
-		return err
+	var tmp int
+
+	err := db.c.QueryRow("SELECT * FROM BANS WHERE banner_id = ? AND banned_id = ?", banner, banned).Scan(&tmp, &tmp)
+	// Print the result
+	if errors.Is(err, sql.ErrNoRows) {
+		// If not, ban the user
+		query := "INSERT INTO BANS (banner_id, banned_id) VALUES (?, ?)"
+		_, err2 := db.c.Exec(query, banner, banned)
+		if err2 != nil {
+			return err2
+		}
 	}
 
-	// If not, ban the user
-	query := "INSERT INTO BANS (banner_id, banned_id) VALUES (?, ?)"
-	_, err = db.c.Exec(query, banner, banned)
 	return err
 }
 
 // UnbanUser unbans a user from another user
 func (db *appdbimpl) UnbanUser(banner int, banned int) error {
 	// Checks if the user is already banned
-	_, err := db.c.Exec("SELECT * FROM BANS WHERE banner_id = ? AND banned_id = ?", banner, banned)
+	var tmp int
+	err := db.c.QueryRow("SELECT * FROM BANS WHERE banner_id = ? AND banned_id = ?", banner, banned).Scan(&tmp, &tmp)
 	if err != nil {
 		return err
 	}
 
 	query := "DELETE FROM BANS WHERE banner_id = ? AND banned_id = ?"
-	_, err = db.c.Exec(query, banner, banned)
+	_, err2 := db.c.Exec(query, banner, banned)
+	if err2 != nil {
+		return err2
+	}
+
 	return err
 }
 

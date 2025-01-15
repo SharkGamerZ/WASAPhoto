@@ -98,6 +98,15 @@ func New(db *sql.DB) (AppDatabase, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error creating database structure: %w", err)
 		}
+
+		createBansTableQuery := `CREATE TABLE BANS (
+													banned_id INTEGER references USERS(id),
+													banner_id INTEGER references USERS(id),
+													PRIMARY KEY (banned_id, banner_id));`
+		_, err = db.Exec(createBansTableQuery)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
 	}
 
 	return &appdbimpl{

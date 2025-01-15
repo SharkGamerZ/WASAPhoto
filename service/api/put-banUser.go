@@ -39,7 +39,8 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	// Bans the user
 	err = rt.db.BanUser(banner, banned)
 	if errors.Is(err, sql.ErrNoRows) {
-		http.Error(w, "User is already banned", http.StatusConflict)
+		w.WriteHeader(http.StatusCreated)
+		return
 	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
