@@ -4,6 +4,7 @@ import (
 	// "git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/reqcontext"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/SharkGamerZ/WASAPhoto/service/api/reqcontext"
 	"github.com/gofrs/uuid"
@@ -69,8 +70,13 @@ func getAuthToken(header http.Header) int {
 	// The string is formatted as "Bearer <token>"
 	token := header.Get("Authorization")
 
-	// Gets only the number from the header
-	userID, err := strconv.Atoi(token[7:])
+	// Rimuove eventuali prefissi "Bearer " se presenti
+	if strings.HasPrefix(token, "Bearer ") {
+		token = strings.TrimPrefix(token, "Bearer ")
+	}
+
+	// Verifica che il token sia un numero
+	userID, err := strconv.Atoi(token)
 	if err != nil {
 		return 0
 	}

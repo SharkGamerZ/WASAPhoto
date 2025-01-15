@@ -45,7 +45,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/users/:id/bans", rt.wrap(rt.getBanneds, true))
 
 	// Post Routes
-	// rt.router.POST("/photos", rt.wrap(rt.createPhoto))
+	// rt.router.POST("/photos", rt.wrap(rt.createPhoto, true))
 
 	// Put Routes
 	rt.router.PUT("/users/:id/username", rt.wrap(rt.setMyUserName, true))
