@@ -13,10 +13,10 @@ import (
 // - [x] setMyUserName
 // - [ ] getMyStream
 // -----------------
-// - [ ] uploadPhoto
-// - [ ] getPhotoById
-// - [ ] getUserPhotos
-// - [ ] deletePhoto
+// - [x] uploadPhoto
+// - [x] getPhotoById
+// - [x] getUserPhotos
+// - [x] deletePhoto
 // -----------------
 // - [x] followUser
 // - [x] unfollowUser
@@ -43,19 +43,23 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/users/:id", rt.wrap(rt.GetUserProfile, true))
 	rt.router.GET("/users/:id/following", rt.wrap(rt.getFollowings, true))
 	rt.router.GET("/users/:id/banned", rt.wrap(rt.getBanneds, true))
+	rt.router.GET("/users/:id/photos", rt.wrap(rt.getUserPhotos, true))
+	rt.router.GET("/users/:id/photos/:photoid", rt.wrap(rt.getPhotoById, true))
 
 	// Post Routes
-	rt.router.POST("/photos", rt.wrap(rt.createPhoto, true))
+	rt.router.POST("/users/:id/photos", rt.wrap(rt.createPhoto, true))
 
 	// Put Routes
 	rt.router.PUT("/users/:id/username", rt.wrap(rt.setMyUserName, true))
 	rt.router.PUT("/users/:id/following/:id2", rt.wrap(rt.followUser, true))
 	rt.router.PUT("/users/:id/banned/:id2", rt.wrap(rt.banUser, true))
+	rt.router.PUT("/users/:id/photos/:photoid/likes", rt.wrap(rt.likePhoto, true))
 
 	// Delete Routes
 	rt.router.DELETE("/users/:id", rt.wrap(rt.deleteUser, true))
 	rt.router.DELETE("/users/:id/following/:id2", rt.wrap(rt.unfollowUser, true))
 	rt.router.DELETE("/users/:id/banned/:id2", rt.wrap(rt.unbanUser, true))
+	rt.router.DELETE("/users/:id/photos/:photoid", rt.wrap(rt.deletePhoto, true))
 
 	return rt.router
 }

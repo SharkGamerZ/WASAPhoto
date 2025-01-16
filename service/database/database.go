@@ -60,6 +60,12 @@ type AppDatabase interface {
 	BanUser(banner int, banned int) error
 	UnbanUser(banner int, banned int) error
 	GetBanneds(userID int) ([]_struct.User, error)
+
+	// Photos
+	CreatePhoto(photo _struct.Photo) error
+	GetUserPhotos(id string) ([]_struct.Photo, error)
+	GetPhotoById(userid string, photoid string) (_struct.Photo, error)
+	DeletePhoto(userid string, photoid string) error
 }
 
 type appdbimpl struct {
@@ -76,37 +82,59 @@ func New(db *sql.DB) (AppDatabase, error) {
 	// fmt.Println("Deleting database")
 	// DeleteDatabase(db)
 
-	// Check if table exists. If not, the database is empty, and we need to create the structure
-	var tableName string
-	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='USERS';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
-		// fmt.Println("Creating database structure")
-		createUsersTableQuery := `CREATE TABLE USERS (id INTEGER NOT NULL PRIMARY KEY,
-													username TEXT
-													bio TEXT
-													propic TEXT);`
-		_, err = db.Exec(createUsersTableQuery)
-		if err != nil {
-			return nil, fmt.Errorf("error creating database structure: %w", err)
-		}
+	// Creates the database structure if it doesn't exist
+	// USERS
+	createUsersTableQuery := `CREATE TABLE IF NOT EXISTS USERS (id INTEGER NOT NULL PRIMARY KEY,
+												username TEXT
+												bio TEXT
+												propic TEXT);`
+	_, err := db.Exec(createUsersTableQuery)
+	if err != nil {
+		return nil, fmt.Errorf("error creating database structure: %w", err)
+	}
 
-		createFollowersTableQuery := `CREATE TABLE FOLLOWERS (
-													followed_id INTEGER references USERS(id),
-													follower_id INTEGER references USERS(id),
-													PRIMARY KEY (followed_id, follower_id));`
-		_, err = db.Exec(createFollowersTableQuery)
-		if err != nil {
-			return nil, fmt.Errorf("error creating database structure: %w", err)
-		}
+	// FOLLOWERS
+	createFollowersTableQuery := `CREATE TABLE IF NOT EXISTS FOLLOWERS (
 
-		createBansTableQuery := `CREATE TABLE BANS (
-													banned_id INTEGER references USERS(id),
-													banner_id INTEGER references USERS(id),
-													PRIMARY KEY (banned_id, banner_id));`
-		_, err = db.Exec(createBansTableQuery)
-		if err != nil {
-			return nil, fmt.Errorf("error creating database structure: %w", err)
-		}
+												followed_id INTEGER references USERS(id),
+												follower_id INTEGER references USERS(id),
+												PRIMARY KEY (followed_id, follower_id));`
+	_, err = db.Exec(createFollowersTableQuery)
+	if err != nil {
+		return nil, fmt.Errorf("error creating database structure: %w", err)
+	}
+
+	// BANS
+	createBansTableQuery := `CREATE TABLE IF NOT EXISTS BANS (
+												banned_id INTEGER references USERS(id),
+												banner_id INTEGER references USERS(id),
+												PRIMARY KEY (banned_id, banner_id));`
+	_, err = db.Exec(createBansTableQuery)
+	if err != nil {
+		return nil, fmt.Errorf("error creating database structure: %w", err)
+	}
+
+	// PHOTOS
+	createPhotosTableQuery := `CREATE TABLE IF NOT EXISTS PHOTOS (
+												id INTEGER NOT NULL PRIMARY KEY,
+												user_id INTEGER references USERS(id),
+												photo TEXT,
+												caption TEXT,
+												timestamp DATETIME);`
+	_, err = db.Exec(createPhotosTableQuery)
+	if err != nil {
+		return nil, fmt.Errorf("error creating database structure: %w", err)
+	}
+
+	// LIKES
+	createLikesTableQuery := `CREATE TABLE IF NOT EXISTS LIKES (
+												photo_id INTEGER references PHOTOS(id),
+												user_id INTEGER references USERS(id),
+												time DATETIME,
+												PRIMARY KEY (photo_id, user_id));`
+	_, err = db.Exec(createLikesTableQuery)
+	if err != nil {
+		return nil, fmt.Errorf("error creating database structure: %w", err)
 	}
 
 	return &appdbimpl{
@@ -128,5 +156,16 @@ func DeleteDatabase(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
+
+	_, err = db.Exec("DROP TABLE BANS")
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("DROP TABLE PHOTOS")
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

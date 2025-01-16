@@ -120,9 +120,13 @@ components:
     PostPhoto:
       description: The photo of the post
       type: string
-      format: byte
-      minLength: 0
-      maxLength: 100000000
+      format: binary
+
+    PostTimestamp:
+      description: "The timestamp of the post"
+      type: string
+      format: date-time
+      example: "2023-10-23T10:12:35Z"
     #-------------Comment related-------------
     CommentId:
       description: "Identifies a single comment"
@@ -157,8 +161,10 @@ components:
       type: object
       properties:
         id: {$ref: "#/components/schemas/PostId"}
+        user_id: {$ref: "#/components/schemas/UserId"}
         description: {$ref: "#/components/schemas/PostDescription"}
         photo: {$ref: "#/components/schemas/PostPhoto"}
+        timestamp: {$ref: "#/components/schemas/PostTimestamp"}
 
     # Comment object
     Comment:
@@ -518,7 +524,7 @@ paths:
 
 
 
-  /users/{user_id}/posts:
+  /users/{user_id}/photos:
     parameters:
         - {$ref: "#/components/parameters/user_id"}
     get:
@@ -552,8 +558,12 @@ paths:
         Adds the post passed in the body to the user's profile.
       requestBody:
         content:
-          application/json:
-            schema: {$ref: "#/components/schemas/Post"}
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                description: { $ref: "#/components/schemas/PostDescription" }
+                photo: { $ref: "#/components/schemas/PostPhoto" }
       responses:
         "201":
           description: Post published.
@@ -565,7 +575,7 @@ paths:
                 example: Post was published
 
 
-  /users/{user_id}/posts/{post_id}:
+  /users/{user_id}/photos/{post_id}:
     parameters:
         - {$ref: "#/components/parameters/post_id"}
         - {$ref: "#/components/parameters/user_id"}
@@ -602,7 +612,7 @@ paths:
 
 
 
-  /users/{user_id}/posts/{post_id}/likes:
+  /users/{user_id}/photos/{post_id}/likes:
     parameters:
         - {$ref: "#/components/parameters/post_id"}
         - {$ref: "#/components/parameters/user_id"}
@@ -630,7 +640,7 @@ paths:
         "404": {$ref: "#/components/responses/NotFound"}
 
 
-  /users/{user_id}/posts/{post_id}/likes/{user_like_id}:
+  /users/{user_id}/photos/{post_id}/likes/{user_like_id}:
     parameters:
         - {$ref: "#/components/parameters/post_id"}
         - {$ref: "#/components/parameters/user_id"}
@@ -690,7 +700,7 @@ paths:
 
 
 
-  /users/{user_id}/posts/{post_id}/comments:
+  /users/{user_id}/photos/{post_id}/comments:
     parameters:
         - {$ref: "#/components/parameters/post_id"}
         - {$ref: "#/components/parameters/user_id"}
@@ -740,7 +750,7 @@ paths:
                 example: Post with id 2402029 was commented
         "404": {$ref: "#/components/responses/NotFound"}
 
-  /users/{user_id}/posts/{post_id}/comments/{comment_id}:
+  /users/{user_id}/photos/{post_id}/comments/{comment_id}:
     parameters:
         - {$ref: "#/components/parameters/post_id"}
         - {$ref: "#/components/parameters/user_id"}
