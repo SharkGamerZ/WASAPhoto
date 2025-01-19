@@ -1,17 +1,40 @@
 package database
 
 import (
+	"database/sql"
+	"errors"
+
 	_struct "github.com/SharkGamerZ/WASAPhoto/service/struct"
 )
 
 // CreatePhoto creates a new photo.
 func (db *appdbimpl) CreatePhoto(photo _struct.Photo) error {
-	_, err := db.c.Exec("INSERT INTO photos (user_id, photo, caption, timestamp) VALUES (?, ?, ?, ?)", photo.UserID, photo.Photo, photo.Caption, photo.Timestamp)
+	id, err := db.GetLastPhotoIDOfUser(photo.UserID)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+	photo.PhotoID = id + 1
+
+	_, err = db.c.Exec("INSERT INTO photos (id, user_id, photo, caption, timestamp) VALUES (?, ?, ?, ?, ?)", photo.PhotoID, photo.UserID, photo.Photo, photo.Caption, photo.Timestamp)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// GetLastPhotoID returns the id of the last photo.
+func (db *appdbimpl) GetLastPhotoIDOfUser(userid int) (int, error) {
+	var id int
+	err := db.c.QueryRow("SELECT id FROM photos WHERE user_id = ? ORDER BY id DESC LIMIT 1", userid).Scan(&id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, nil
+		}
+		return 0, err
+	}
+
+	return id, nil
 }
 
 // GetUserPhotos returns the photos of a user.

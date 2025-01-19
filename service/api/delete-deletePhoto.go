@@ -48,4 +48,8 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	// Return the success message
 	json.NewEncoder(w).Encode(map[string]string{"message": "Photo deleted"})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

@@ -118,9 +118,11 @@ components:
       pattern: "^[a-zA-Z0-9\\s\\S]*$"
 
     PostPhoto:
-      description: The photo of the post
+      description: "The photo of the post"
       type: string
       format: binary
+      minLength: 0
+      maxLength: 10000000
 
     PostTimestamp:
       description: "The timestamp of the post"

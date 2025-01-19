@@ -90,18 +90,17 @@ func New(db *sql.DB) (AppDatabase, error) {
 												propic TEXT);`
 	_, err := db.Exec(createUsersTableQuery)
 	if err != nil {
-		return nil, fmt.Errorf("error creating database structure: %w", err)
+		return nil, fmt.Errorf("error creating USERS table: %w", err)
 	}
 
 	// FOLLOWERS
 	createFollowersTableQuery := `CREATE TABLE IF NOT EXISTS FOLLOWERS (
-
 												followed_id INTEGER references USERS(id),
 												follower_id INTEGER references USERS(id),
 												PRIMARY KEY (followed_id, follower_id));`
 	_, err = db.Exec(createFollowersTableQuery)
 	if err != nil {
-		return nil, fmt.Errorf("error creating database structure: %w", err)
+		return nil, fmt.Errorf("error creating FOLLOWERS table: %w", err)
 	}
 
 	// BANS
@@ -111,30 +110,32 @@ func New(db *sql.DB) (AppDatabase, error) {
 												PRIMARY KEY (banned_id, banner_id));`
 	_, err = db.Exec(createBansTableQuery)
 	if err != nil {
-		return nil, fmt.Errorf("error creating database structure: %w", err)
+		return nil, fmt.Errorf("error creating BANS table: %w", err)
 	}
 
 	// PHOTOS
 	createPhotosTableQuery := `CREATE TABLE IF NOT EXISTS PHOTOS (
-												id INTEGER NOT NULL PRIMARY KEY,
-												user_id INTEGER references USERS(id),
+												id INTEGER NOT NULL,
+												user_id INTEGER NOT NULL references USERS(id),
 												photo TEXT,
 												caption TEXT,
-												timestamp DATETIME);`
+												timestamp DATETIME,
+												PRIMARY KEY (id, user_id));`
 	_, err = db.Exec(createPhotosTableQuery)
 	if err != nil {
-		return nil, fmt.Errorf("error creating database structure: %w", err)
+		return nil, fmt.Errorf("error creating PHOTOS table: %w", err)
 	}
 
 	// LIKES
 	createLikesTableQuery := `CREATE TABLE IF NOT EXISTS LIKES (
+												owner_id INTEGER references USERS(id),
 												photo_id INTEGER references PHOTOS(id),
 												user_id INTEGER references USERS(id),
 												time DATETIME,
-												PRIMARY KEY (photo_id, user_id));`
+												PRIMARY KEY (owner_id, photo_id, user_id));`
 	_, err = db.Exec(createLikesTableQuery)
 	if err != nil {
-		return nil, fmt.Errorf("error creating database structure: %w", err)
+		return nil, fmt.Errorf("error creating LIKES table: %w", err)
 	}
 
 	return &appdbimpl{
@@ -163,6 +164,11 @@ func DeleteDatabase(db *sql.DB) error {
 	}
 
 	_, err = db.Exec("DROP TABLE PHOTOS")
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("DROP TABLE LIKES")
 	if err != nil {
 		return err
 	}
