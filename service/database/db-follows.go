@@ -46,5 +46,9 @@ func (db *appdbimpl) GetFollowings(userID int) ([]_struct.User, error) {
 		users = append(users, user)
 	}
 
+	if rows.Err() != nil {
+		return nil, err
+	}
+
 	return users, nil
 }
