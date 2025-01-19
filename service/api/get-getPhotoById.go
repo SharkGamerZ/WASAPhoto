@@ -30,7 +30,7 @@ func (rt *_router) getPhotoById(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	// Return the photo
-	json.NewEncoder(w).Encode(photo)
+	err = json.NewEncoder(w).Encode(photo)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

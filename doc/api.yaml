@@ -665,7 +665,7 @@ paths:
                 type: string
                 description: Response string
                 example: Post with id 9284929 was liked
-        "400":
+        "403":
           description: Photo already liked.
           content:
             text/plain:

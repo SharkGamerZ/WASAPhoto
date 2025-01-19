@@ -66,6 +66,11 @@ type AppDatabase interface {
 	GetUserPhotos(id string) ([]_struct.Photo, error)
 	GetPhotoById(userid string, photoid string) (_struct.Photo, error)
 	DeletePhoto(userid string, photoid string) error
+
+	// Likes
+	LikePhoto(like _struct.Like) error
+	UnlikePhoto(like _struct.Like) error
+	GetLikes(ownerID, photoID string) ([]_struct.User, error)
 }
 
 type appdbimpl struct {
