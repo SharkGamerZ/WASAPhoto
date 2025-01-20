@@ -68,3 +68,17 @@ func (db *appdbimpl) GetBanneds(userID int) ([]_struct.User, error) {
 
 	return users, nil
 }
+
+// IsBanned checks if a user is banned from another user
+func (db *appdbimpl) IsBanned(banner int, banned int) (bool, error) {
+	var tmp int
+	err := db.c.QueryRow("SELECT * FROM BANS WHERE banner_id = ? AND banned_id = ?", banner, banned).Scan(&tmp, &tmp)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}

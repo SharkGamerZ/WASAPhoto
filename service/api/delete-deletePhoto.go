@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/SharkGamerZ/WASAPhoto/service/api/reqcontext"
 	"github.com/julienschmidt/httprouter"
@@ -15,11 +16,19 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	w.Header().Set("Content-type", "application/json")
 
 	// Gets the id of the user from the URL
-	url_id := ps.ByName("id")
-	photo_id := ps.ByName("photoid")
+	userID, err := strconv.Atoi(ps.ByName("id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	photoID, err := strconv.Atoi(ps.ByName("photoid"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	// Checks if the user is the owner of the photo
-	photo, err := rt.db.GetPhotoById(url_id, photo_id)
+	photo, err := rt.db.GetPhotoById(userID, photoID)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "Photo not found", http.StatusNotFound)
 		return
@@ -34,7 +43,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Delete the photo
-	err = rt.db.DeletePhoto(url_id, photo_id)
+	err = rt.db.DeletePhoto(userID, photoID)
 
 	// Check if the photo was not found, double check
 	if errors.Is(err, sql.ErrNoRows) {

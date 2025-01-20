@@ -15,7 +15,7 @@
 # - [x] likePhoto
 # - [x] unlikePhoto
 # - [x] commentPhoto
-# - [x] uncommentPhoto
+# - [x] deleteComment
 #
 #
 #
@@ -67,9 +67,17 @@ components:
     Authorization:
       type: http
       scheme: bearer
+      description: "Bearer token for authorization"
   #-------------------------- Definition of the schemas --------------------------
   schemas:
   #--------------------------Fields--------------------------
+    #---------------Common-----------------
+    Timestamp:
+      description: |
+        The timestamp of the object
+      type: string
+      format: date-time
+      example: "2025-01-01 00:00:00"
 
     #-------------User related-------------
     UserId:
@@ -124,11 +132,6 @@ components:
       minLength: 0
       maxLength: 10000000
 
-    PostTimestamp:
-      description: "The timestamp of the post"
-      type: string
-      format: date-time
-      example: "2023-10-23T10:12:35Z"
     #-------------Comment related-------------
     CommentId:
       description: "Identifies a single comment"
@@ -166,7 +169,7 @@ components:
         user_id: {$ref: "#/components/schemas/UserId"}
         description: {$ref: "#/components/schemas/PostDescription"}
         photo: {$ref: "#/components/schemas/PostPhoto"}
-        timestamp: {$ref: "#/components/schemas/PostTimestamp"}
+        timestamp: {$ref: "#/components/schemas/Timestamp"}
 
     # Comment object
     Comment:
@@ -175,7 +178,11 @@ components:
       type: object
       properties:
         id: {$ref: "#/components/schemas/CommentId"}
-        description: {$ref: "#/components/schemas/CommentBody"}
+        userid:  {$ref: "#/components/schemas/UserId"}
+        post_owner: {$ref: "#/components/schemas/UserId"}
+        post_id: {$ref: "#/components/schemas/PostId"}
+        content: {$ref: "#/components/schemas/CommentBody"}
+        timestamp: {$ref: "#/components/schemas/Timestamp"}
 
   #-------------------------- Definition of the parameters --------------------------#
   parameters:
@@ -563,6 +570,7 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              description: Post to add
               properties:
                 description: { $ref: "#/components/schemas/PostDescription" }
                 photo: { $ref: "#/components/schemas/PostPhoto" }
@@ -759,7 +767,7 @@ paths:
         - {$ref: "#/components/parameters/comment_id"}
     delete:
       tags: ["post comment"]
-      operationId: uncommentPhoto
+      operationId: deleteComment
       summary: Delete comment
       description: |
         The user who calls this delete his comment with "comment_id" ID.

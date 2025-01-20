@@ -46,9 +46,11 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/users/:id/photos", rt.wrap(rt.getUserPhotos, true))
 	rt.router.GET("/users/:id/photos/:photoid", rt.wrap(rt.getPhotoById, true))
 	rt.router.GET("/users/:id/photos/:photoid/likes", rt.wrap(rt.getLikes, true))
+	rt.router.GET("/users/:id/photos/:photoid/comments", rt.wrap(rt.getComments, true))
 
 	// Post Routes
 	rt.router.POST("/users/:id/photos", rt.wrap(rt.createPhoto, true))
+	rt.router.POST("/users/:id/photos/:photoid/comments", rt.wrap(rt.commentPhoto, true))
 
 	// Put Routes
 	rt.router.PUT("/users/:id/username", rt.wrap(rt.setMyUserName, true))
@@ -62,6 +64,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.DELETE("/users/:id/banned/:id2", rt.wrap(rt.unbanUser, true))
 	rt.router.DELETE("/users/:id/photos/:photoid", rt.wrap(rt.deletePhoto, true))
 	rt.router.DELETE("/users/:id/photos/:photoid/likes/:user_like_id", rt.wrap(rt.unlikePhoto, true))
+	rt.router.DELETE("/users/:id/photos/:photoid/comments/:comment_id", rt.wrap(rt.deleteComment, true))
 
 	return rt.router
 }

@@ -38,7 +38,7 @@ func (db *appdbimpl) GetLastPhotoIDOfUser(userid int) (int, error) {
 }
 
 // GetUserPhotos returns the photos of a user.
-func (db *appdbimpl) GetUserPhotos(id string) ([]_struct.Photo, error) {
+func (db *appdbimpl) GetUserPhotos(id int) ([]_struct.Photo, error) {
 	rows, err := db.c.Query("SELECT * FROM photos WHERE user_id = ?", id)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func (db *appdbimpl) GetUserPhotos(id string) ([]_struct.Photo, error) {
 }
 
 // GetPhotoById returns the photo with the given id.
-func (db *appdbimpl) GetPhotoById(userid string, photoid string) (_struct.Photo, error) {
+func (db *appdbimpl) GetPhotoById(userid int, photoid int) (_struct.Photo, error) {
 	var photo _struct.Photo
 
 	err := db.c.QueryRow("SELECT * FROM photos WHERE user_id = ? AND id = ?", userid, photoid).Scan(&photo.PhotoID, &photo.UserID, &photo.Photo, &photo.Caption, &photo.Timestamp)
@@ -77,7 +77,7 @@ func (db *appdbimpl) GetPhotoById(userid string, photoid string) (_struct.Photo,
 }
 
 // DeletePhoto deletes the photo with the given id.
-func (db *appdbimpl) DeletePhoto(userid string, photoid string) error {
+func (db *appdbimpl) DeletePhoto(userid int, photoid int) error {
 	_, err := db.c.Exec("DELETE FROM photos WHERE user_id = ? AND id = ?", userid, photoid)
 	if err != nil {
 		return err

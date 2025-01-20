@@ -17,9 +17,21 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	w.Header().Set("Content-type", "application/json")
 
 	// Gets the id of the user from the URL
-	ownerID := ps.ByName("id")
-	photoID := ps.ByName("photoid")
+	ownerID, err := strconv.Atoi(ps.ByName("id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	photoID, err := strconv.Atoi(ps.ByName("photoid"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	userID, err := strconv.Atoi(ps.ByName("user_like_id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	// Check if the user is authenticated
 	if userID != ctx.UserID {
@@ -40,16 +52,8 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 
 	// Creates the like
 	var like _struct.Like
-	like.OwnerID, err = strconv.Atoi(ownerID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	like.PhotoID, err = strconv.Atoi(photoID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	like.OwnerID = ownerID
+	like.PhotoID = photoID
 	like.UserID = userID
 	like.Timestamp = time.Now().Format("2025-01-01 00:00:00")
 

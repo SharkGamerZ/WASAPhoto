@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/SharkGamerZ/WASAPhoto/service/api/reqcontext"
 	"github.com/julienschmidt/httprouter"
@@ -15,10 +16,14 @@ func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps http
 	w.Header().Set("Content-type", "application/json")
 
 	// Gets the id of the user from the URL
-	url_id := ps.ByName("id")
+	userID, err := strconv.Atoi(ps.ByName("id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	// Get the photos of the user
-	photos, err := rt.db.GetUserPhotos(url_id)
+	photos, err := rt.db.GetUserPhotos(userID)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "User has no posts", http.StatusNotFound)
 		return

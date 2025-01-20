@@ -60,17 +60,24 @@ type AppDatabase interface {
 	BanUser(banner int, banned int) error
 	UnbanUser(banner int, banned int) error
 	GetBanneds(userID int) ([]_struct.User, error)
+	IsBanned(banner int, banned int) (bool, error)
 
 	// Photos
 	CreatePhoto(photo _struct.Photo) error
-	GetUserPhotos(id string) ([]_struct.Photo, error)
-	GetPhotoById(userid string, photoid string) (_struct.Photo, error)
-	DeletePhoto(userid string, photoid string) error
+	GetUserPhotos(id int) ([]_struct.Photo, error)
+	GetPhotoById(userid int, photoid int) (_struct.Photo, error)
+	DeletePhoto(userid int, photoid int) error
 
 	// Likes
 	LikePhoto(like _struct.Like) error
 	UnlikePhoto(like _struct.Like) error
-	GetLikes(ownerID, photoID string) ([]_struct.User, error)
+	GetLikes(ownerID, photoID int) ([]_struct.User, error)
+
+	// Comments
+	CommentPhoto(ownerID int, photoID int, comment _struct.Comment, userID int) error
+	GetCommentByID(commentID int) (_struct.Comment, error)
+	DeleteComment(commentID int) error
+	GetComments(ownerID, photoID int) ([]_struct.Comment, error)
 }
 
 type appdbimpl struct {
@@ -86,6 +93,9 @@ func New(db *sql.DB) (AppDatabase, error) {
 
 	// fmt.Println("Deleting database")
 	// DeleteDatabase(db)
+
+	// Drops table comments
+	// _, _ = db.Exec("DROP TABLE COMMENTS")
 
 	// Creates the database structure if it doesn't exist
 	// USERS
@@ -143,6 +153,20 @@ func New(db *sql.DB) (AppDatabase, error) {
 		return nil, fmt.Errorf("error creating LIKES table: %w", err)
 	}
 
+	// COMMENTS
+	createCommentsTableQuery := `CREATE TABLE IF NOT EXISTS COMMENTS (
+												id INTEGER NOT NULL PRIMARY KEY,
+												owner_id INTEGER references USERS(id),
+												photo_id INTEGER references PHOTOS(id),
+												user_id INTEGER references USERS(id),
+												comment TEXT,
+												time DATETIME);`
+
+	_, err = db.Exec(createCommentsTableQuery)
+	if err != nil {
+		return nil, fmt.Errorf("error creating COMMENTS table: %w", err)
+	}
+
 	return &appdbimpl{
 		c: db,
 	}, nil
@@ -174,6 +198,11 @@ func DeleteDatabase(db *sql.DB) error {
 	}
 
 	_, err = db.Exec("DROP TABLE LIKES")
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("DROP TABLE COMMENTS")
 	if err != nil {
 		return err
 	}

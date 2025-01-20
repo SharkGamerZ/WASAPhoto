@@ -11,36 +11,36 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// getLikes returns a list of users who liked a photo
-func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	// Get the photoID and owner ID from the URL
+// getComments returns comments of a photo
+func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	// Gets the photoID and owner ID from the URL
 	photoID, err := strconv.Atoi(ps.ByName("photoid"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	ownerID, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Get the likes of the photo
-	likes, err := rt.db.GetLikes(ownerID, photoID)
+	comments, err := rt.db.GetComments(ownerID, photoID)
 	if errors.Is(err, sql.ErrNoRows) {
-		http.Error(w, "No likes found", http.StatusNotFound)
+		http.Error(w, "No comments found", http.StatusNotFound)
 		return
 	}
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Return the likes
-	err = json.NewEncoder(w).Encode(likes)
+	// Return the comments
+	err = json.NewEncoder(w).Encode(comments)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 }
