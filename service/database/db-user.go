@@ -87,7 +87,7 @@ func (db *appdbimpl) UpdateUsername(userID int, newUsername string) error {
 // GetMyStream gets the user's stream
 func (db *appdbimpl) GetMyStream(userID int) ([]_struct.Photo, error) {
 	// Gets the list of users followed by the user
-	rows, err := db.c.Query("SELECT follower_id FROM FOLLOWERS WHERE following_id = ?", userID)
+	rows, err := db.c.Query("SELECT followed_id FROM FOLLOWERS WHERE follower_id = ?", userID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -99,13 +99,22 @@ func (db *appdbimpl) GetMyStream(userID int) ([]_struct.Photo, error) {
 
 	// Gets the photos of the users followed by the user
 	for rows.Next() {
-		var userID int
-		err = rows.Scan(&userID)
+		var currentUserID int
+		err = rows.Scan(&currentUserID)
 		if err != nil {
 			return nil, err
 		}
 
-		userPhotos, err := db.GetUserPhotos(userID)
+		// Checks if the user is banned
+		isBanned, err := db.IsBanned(currentUserID, userID)
+		if err != nil {
+			return nil, err
+		}
+		if isBanned {
+			continue
+		}
+
+		userPhotos, err := db.GetUserPhotos(currentUserID)
 		if err != nil {
 			return nil, err
 		}

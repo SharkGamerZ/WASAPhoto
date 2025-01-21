@@ -3,15 +3,12 @@ package database
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 
 	_struct "github.com/SharkGamerZ/WASAPhoto/service/struct"
 )
 
 // CommentPhoto comments a photo
 func (db *appdbimpl) CommentPhoto(ownerID int, photoID int, comment _struct.Comment, userID int) error {
-	fmt.Println("The user with the id", userID, "commented the photo with the id", photoID, "of the user with the id", ownerID, "with the content", comment.Content, "at", comment.Timestamp)
-
 	id, err := db.GetLastCommentID()
 	if err != nil {
 		return err
@@ -24,7 +21,6 @@ func (db *appdbimpl) CommentPhoto(ownerID int, photoID int, comment _struct.Comm
 		return err
 	}
 
-	fmt.Println("Comment with id", comment.ID, "created")
 	return nil
 }
 

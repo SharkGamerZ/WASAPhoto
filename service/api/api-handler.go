@@ -11,7 +11,7 @@ import (
 // - [x] getUserProfile
 // - [x] deleteUser
 // - [x] setMyUserName
-// - [ ] getMyStream
+// - [x] getMyStream
 // -----------------
 // - [x] uploadPhoto
 // - [x] getPhotoById
