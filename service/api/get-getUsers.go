@@ -39,6 +39,19 @@ func (rt *_router) GetUsers(w http.ResponseWriter, r *http.Request, ps httproute
 		return
 	}
 
+	// Filter users, checking if they banned the ser
+	for i, user := range users {
+		// Check if the user is banned
+		banned, err := rt.db.IsBanned(user.UserID, ctx.UserID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if banned {
+			users = append(users[:i], users[i+1:]...)
+		}
+	}
+
 	// Send the users
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(users)

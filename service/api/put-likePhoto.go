@@ -17,7 +17,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	w.Header().Set("Content-type", "application/json")
 
 	// Gets the id of the user from the URL
-	ownerID, err := strconv.Atoi(ps.ByName("id"))
+	photoOwnerID, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -27,20 +27,31 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	userID, err := strconv.Atoi(ps.ByName("user_like_id"))
+	likeOwnerID, err := strconv.Atoi(ps.ByName("user_like_id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Check if the user is authenticated
-	if userID != ctx.UserID {
+	if likeOwnerID != ctx.UserID {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
+	// Checks if the user is banned
+	banned, err := rt.db.IsBanned(photoOwnerID, likeOwnerID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if banned {
+		http.Error(w, "You are banned", http.StatusForbidden)
+		return
+	}
+
 	// Checks if the photo exists
-	_, err = rt.db.GetPhotoById(ownerID, photoID)
+	_, err = rt.db.GetPhotoById(photoOwnerID, photoID)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "Photo not found", http.StatusNotFound)
 		return
@@ -52,9 +63,9 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 
 	// Creates the like
 	var like _struct.Like
-	like.OwnerID = ownerID
+	like.OwnerID = photoOwnerID
 	like.PhotoID = photoID
-	like.UserID = userID
+	like.UserID = likeOwnerID
 	like.Timestamp = time.Now().Format("2025-01-01 00:00:00")
 
 	// Likes the photo

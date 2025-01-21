@@ -19,14 +19,25 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ownerID, err := strconv.Atoi(ps.ByName("id"))
+	photoOwnerID, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// Checks if the user is banned from the owner
+	banned, err := rt.db.IsBanned(ctx.UserID, photoOwnerID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if banned {
+		http.Error(w, "You are banned from this user", http.StatusForbidden)
+		return
+	}
+
 	// Get the likes of the photo
-	likes, err := rt.db.GetLikes(ownerID, photoID)
+	likes, err := rt.db.GetLikes(photoOwnerID, photoID)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "No likes found", http.StatusNotFound)
 		return

@@ -17,23 +17,35 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	w.Header().Set("Content-type", "application/json")
 
 	// Gets the id of the user from the URL
-	url_id := ps.ByName("id")
-	photo_id := ps.ByName("photoid")
-	user_like_id := ps.ByName("user_like_id")
+	photoOwnerID, err := strconv.Atoi(ps.ByName("id"))
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+	photoID, err := strconv.Atoi(ps.ByName("photoid"))
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+	likeOwnerID, err := strconv.Atoi(ps.ByName("user_like_id"))
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
 
 	// Checks if the user is authenticated
-	if user_like_id != strconv.Itoa(ctx.UserID) {
+	if likeOwnerID != ctx.UserID {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	// Checks if the user has already liked the photo
 	var like _struct.Like
-	like.OwnerID, _ = strconv.Atoi(url_id)
-	like.PhotoID, _ = strconv.Atoi(photo_id)
-	like.UserID, _ = strconv.Atoi(user_like_id)
+	like.OwnerID = photoOwnerID
+	like.PhotoID = photoID
+	like.UserID = likeOwnerID
 
-	err := rt.db.UnlikePhoto(like)
+	err = rt.db.UnlikePhoto(like)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "Photo not found", http.StatusNotFound)
 		return

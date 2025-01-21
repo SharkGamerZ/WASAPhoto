@@ -26,6 +26,23 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
+	// Checks if the uer is authorized
+	if follower != ctx.UserID {
+		http.Error(w, "You are not authorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Checks if the user is banned
+	banned, err := rt.db.IsBanned(followed, follower)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if banned {
+		http.Error(w, "You are banned", http.StatusForbidden)
+		return
+	}
+
 	// Checks if user exists
 	_, err = rt.db.GetUserById(followed)
 	if errors.Is(err, sql.ErrNoRows) {

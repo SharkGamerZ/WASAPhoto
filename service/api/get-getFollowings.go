@@ -19,6 +19,17 @@ func (rt *_router) getFollowings(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
+	// Checks if the user is banned
+	banned, err := rt.db.IsBanned(userID, ctx.UserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if banned {
+		http.Error(w, "You are banned from this user", http.StatusForbidden)
+		return
+	}
+
 	// Gets the followers of the user
 	followers, err := rt.db.GetFollowings(userID)
 	if err != nil {

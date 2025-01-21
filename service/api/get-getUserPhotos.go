@@ -22,6 +22,17 @@ func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
+	// Checks if the user is banned
+	banned, err := rt.db.IsBanned(userID, ctx.UserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if banned {
+		http.Error(w, "User is banned", http.StatusForbidden)
+		return
+	}
+
 	// Get the photos of the user
 	photos, err := rt.db.GetUserPhotos(userID)
 	if errors.Is(err, sql.ErrNoRows) {

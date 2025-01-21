@@ -26,6 +26,12 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
+	// Checks if the uer is authorized
+	if banner != ctx.UserID {
+		http.Error(w, "You are not authorized", http.StatusUnauthorized)
+		return
+	}
+
 	// Checks if user exists
 	_, err = rt.db.GetUserById(banned)
 	if errors.Is(err, sql.ErrNoRows) {

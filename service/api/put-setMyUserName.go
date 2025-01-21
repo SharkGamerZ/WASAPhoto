@@ -22,6 +22,12 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
+	// Checks if the user is authenticated
+	if userID != ctx.UserID {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	// Gets the user from the request body
 	var username string
 	err = json.NewDecoder(r.Body).Decode(&username)

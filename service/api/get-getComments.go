@@ -20,13 +20,24 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	ownerID, err := strconv.Atoi(ps.ByName("id"))
+	photoOwnerID, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	comments, err := rt.db.GetComments(ownerID, photoID)
+	// Checks if the user is banned
+	banned, err := rt.db.IsBanned(photoOwnerID, ctx.UserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if banned {
+		http.Error(w, "You are banned from this user", http.StatusForbidden)
+		return
+	}
+
+	comments, err := rt.db.GetComments(photoOwnerID, photoID)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "No comments found", http.StatusNotFound)
 		return

@@ -27,6 +27,12 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
+	// Checks if the banner is the same as the authenticated user
+	if ctx.UserID != banner {
+		http.Error(w, "You can't unban this user", http.StatusForbidden)
+		return
+	}
+
 	// Unbans the user
 	err = rt.db.UnbanUser(banned, banner)
 	// If the user wasn't banned

@@ -14,16 +14,25 @@ import (
 // Get all users
 func (rt *_router) GetUserProfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Gets the user id from the request
-	userID := ps.ByName("id")
-
-	// Convert the user id to an int
-	userIDInt, err := strconv.Atoi(userID)
+	userID, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	user, err := rt.db.GetUserById(userIDInt)
+	// Checks if the user is banned
+	banned, err := rt.db.IsBanned(userID, ctx.UserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if banned {
+		http.Error(w, "User is banned", http.StatusForbidden)
+		return
+	}
+
+	// Gets the user profile
+	user, err := rt.db.GetUserById(userID)
 
 	// If user doesn't exist
 	if errors.Is(err, sql.ErrNoRows) {

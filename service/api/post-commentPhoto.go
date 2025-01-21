@@ -27,16 +27,7 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	// Gets the comment from the body
-	var comment _struct.Comment
-
-	err = json.NewDecoder(r.Body).Decode(&comment)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Checks if the user is banned
+	// Checks if the user is banned from the Photo Owner
 	banned, err := rt.db.IsBanned(photoOwnerID, ctx.UserID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -44,6 +35,15 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 	if banned {
 		http.Error(w, "You are banned", http.StatusForbidden)
+		return
+	}
+
+	// Gets the comment from the body
+	var comment _struct.Comment
+
+	err = json.NewDecoder(r.Body).Decode(&comment)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

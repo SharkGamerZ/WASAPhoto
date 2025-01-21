@@ -16,20 +16,31 @@ func (rt *_router) getPhotoById(w http.ResponseWriter, r *http.Request, ps httpr
 	w.Header().Set("Content-type", "application/json")
 
 	// Gets the id of the user from the URL
-	user_id, err := strconv.Atoi(ps.ByName("id"))
+	photoOwnerID, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	photo_id, err := strconv.Atoi(ps.ByName("photoid"))
+	photoID, err := strconv.Atoi(ps.ByName("photoid"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Check if the user is banned from the owner
+	banned, err := rt.db.IsBanned(photoOwnerID, ctx.UserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if banned {
+		http.Error(w, "You are banned from this user", http.StatusForbidden)
 		return
 	}
 
 	// Get the photo
-	photo, err := rt.db.GetPhotoById(user_id, photo_id)
+	photo, err := rt.db.GetPhotoById(photoOwnerID, photoID)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "Photo not found", http.StatusNotFound)
 		return
