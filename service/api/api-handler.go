@@ -47,6 +47,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/users/:id/photos/:photoid", rt.wrap(rt.getPhotoById, true))
 	rt.router.GET("/users/:id/photos/:photoid/likes", rt.wrap(rt.getLikes, true))
 	rt.router.GET("/users/:id/photos/:photoid/comments", rt.wrap(rt.getComments, true))
+	rt.router.GET("/users/:id/stream", rt.wrap(rt.GetMyStream, true))
 
 	// Post Routes
 	rt.router.POST("/users/:id/photos", rt.wrap(rt.createPhoto, true))

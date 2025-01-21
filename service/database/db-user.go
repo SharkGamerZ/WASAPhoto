@@ -3,6 +3,9 @@ package database
 import (
 	// "database/sql"
 
+	"database/sql"
+	"errors"
+
 	"github.com/SharkGamerZ/WASAPhoto/service/struct"
 )
 
@@ -79,4 +82,39 @@ func (db *appdbimpl) DeleteUser(userID int) error {
 func (db *appdbimpl) UpdateUsername(userID int, newUsername string) error {
 	_, err := db.c.Exec("UPDATE USERS SET username = ? WHERE id = ?", newUsername, userID)
 	return err
+}
+
+// GetMyStream gets the user's stream
+func (db *appdbimpl) GetMyStream(userID int) ([]_struct.Photo, error) {
+	// Gets the list of users followed by the user
+	rows, err := db.c.Query("SELECT follower_id FROM FOLLOWERS WHERE following_id = ?", userID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var photos []_struct.Photo
+
+	// Gets the photos of the users followed by the user
+	for rows.Next() {
+		var userID int
+		err = rows.Scan(&userID)
+		if err != nil {
+			return nil, err
+		}
+
+		userPhotos, err := db.GetUserPhotos(userID)
+		if err != nil {
+			return nil, err
+		}
+		photos = append(photos, userPhotos...)
+	}
+
+	if rows.Err() != nil {
+		return nil, err
+	}
+
+	return photos, nil
 }

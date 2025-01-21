@@ -45,6 +45,7 @@ type AppDatabase interface {
 	GetUserById(userID int) (_struct.User, error)
 	GetUserByUsername(username string) (_struct.User, error)
 	GetUsers() ([]_struct.User, error)
+	GetMyStream(userID int) ([]_struct.Photo, error)
 
 	CreateUser(_struct.User) (int, error)
 	DeleteUser(UserID int) error
