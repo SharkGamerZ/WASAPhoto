@@ -23,6 +23,8 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
+	rt.baseLogger.Info("User:", user)
+
 	// Checks if the username is valid
 	if !isValidUsername(user.Username) {
 		http.Error(w, "Invalid username", http.StatusBadRequest)

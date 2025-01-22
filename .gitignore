@@ -12,3 +12,5 @@ docker-compose.log
 /doc/json
 /doc/markdown
 webapi
+
+/webui/node_modules/
