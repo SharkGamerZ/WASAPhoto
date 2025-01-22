@@ -15,7 +15,7 @@
 # - [x] likePhoto
 # - [x] unlikePhoto
 # - [x] commentPhoto
-# - [x] deleteComment
+# - [x] uncommentPhoto
 #
 #
 #
@@ -77,6 +77,8 @@ components:
         The timestamp of the object
       type: string
       format: date-time
+      minLength: 10
+      maxLength: 20
       example: "2025-01-01 00:00:00"
 
     #-------------User related-------------
@@ -767,7 +769,7 @@ paths:
         - {$ref: "#/components/parameters/comment_id"}
     delete:
       tags: ["post comment"]
-      operationId: deleteComment
+      operationId: uncommentPhoto
       summary: Delete comment
       description: |
         The user who calls this delete his comment with "comment_id" ID.

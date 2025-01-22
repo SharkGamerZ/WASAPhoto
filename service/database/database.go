@@ -95,9 +95,6 @@ func New(db *sql.DB) (AppDatabase, error) {
 	// fmt.Println("Deleting database")
 	// DeleteDatabase(db)
 
-	// Drops table comments
-	// _, _ = db.Exec("DROP TABLE COMMENTS")
-
 	// Creates the database structure if it doesn't exist
 	// USERS
 	createUsersTableQuery := `CREATE TABLE IF NOT EXISTS USERS (id INTEGER NOT NULL PRIMARY KEY,
