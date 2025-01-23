@@ -26,6 +26,17 @@ export default {
 	mounted() {
 		this.fetchUsers(); // Fetch all users initially
 	},
+	props: {
+		initialUsers: {
+			type: Array,
+			default: () => []
+		}
+	},
+	created() {
+		if (this.initialUsers.length) {
+			this.users = this.initialUsers;
+		}
+	}
 };
 </script>
 
@@ -36,13 +47,14 @@ export default {
 		<ErrorMsg v-if="errormsg" :msg="errormsg" />
 		<div class="mb-3">
 			<label for="search" class="form-label">Search by Username</label>
-			<input type="text" class="form-control" id="search" v-model="searchQuery" @input="fetchUsers" placeholder="Enter username" />
+			<input type="text" class="form-control" id="search" v-model="searchQuery" @input="fetchUsers"
+				placeholder="Enter username" />
 		</div>
 		<ul class="list-group">
-			<li v-for="user in users" :key="user.userID" class="list-group-item">
-				<h5>{{ user.username }}</h5>
-				<img :src="user.propic" alt="Profile Picture" class="img-thumbnail" width="50" height="50" />
-				<p>{{ user.bio }}</p>
+			<li v-for="user in users" :key="user.userID" class="list-group-item d-flex align-items-center">
+				<img :src="user.propic" alt="Profile Picture" class="img-thumbnail rounded-circle" width="50"
+					height="50" />
+				<h5 class="ms-3">{{ user.username }}</h5>
 			</li>
 		</ul>
 	</div>
@@ -50,4 +62,13 @@ export default {
 
 <style>
 /* Add any specific styles for the search view here */
+.list-group-item {
+	display: flex;
+	align-items: center;
+}
+
+.list-group-item img {
+	margin-right: 15px;
+}
 </style>
+

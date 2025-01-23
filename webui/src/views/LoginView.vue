@@ -18,7 +18,10 @@ export default {
 				} else if (response.status === 200) {
 					alert('Logged in successfully!');
 				}
-				//this.$router.push('/'); // Redirect to home page after login
+				// Store the token in localStorage
+				const token = response.data.id;
+				localStorage.setItem('token', token);
+				//this.$router.push('/users'); // Redirect to home page after login
 			} catch (e) {
 				this.errormsg = e.response ? e.response.data : e.toString();
 			}

@@ -1,3 +1,0 @@
-- [v] Capire come gestire le immagini
-- [ ] Capire come gestire i likes, potrei mettere un vettore di user_id nelle Photo, per il db comunque usero' la tabella  N a n
-- [ ] Scegliere se usare una chiave tripla per i commenti o una chiave univoca

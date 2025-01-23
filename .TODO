@@ -1,0 +1,13 @@
+- [v] Capire come gestire le immagini
+- [ ] Capire come gestire i likes, potrei mettere un vettore di user_id nelle Photo, per il db comunque usero' la tabella  N a n
+- [ ] Scegliere se usare una chiave tripla per i commenti o una chiave univoca
+
+- [ ] Aggiungere i booleani per la visualizzazione:
+	- [ ] isFollowed su uno user, per capire se lo user che sta richiedendo quella pagina lo segua o meno
+	- [ ] isLiked su un post, per capire se quell'utente ha gia' messo like
+
+
+
+FRONTEND
+- [ ] Capire come far si che la sessione venga mantenuta ovunque
+

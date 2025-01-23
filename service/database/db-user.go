@@ -23,11 +23,29 @@ func (db *appdbimpl) GetUserById(userID int) (_struct.User, error) {
 	return user, err
 }
 
-// Gets user from DB
-func (db *appdbimpl) GetUserByUsername(username string) (_struct.User, error) {
-	var user _struct.User
-	err := db.c.QueryRow(`SELECT id, username FROM USERS WHERE username= ?;`, username).Scan(&user.UserID, &user.Username)
-	return user, err
+// Gets users from DB by username
+func (db *appdbimpl) GetUsersByUsername(username string) ([]_struct.User, error) {
+	rows, err := db.c.Query(`SELECT id, username FROM USERS WHERE username LIKE ?;`, "%"+username+"%")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []_struct.User
+	for rows.Next() {
+		var user _struct.User
+		err = rows.Scan(&user.UserID, &user.Username)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	if rows.Err() != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 // Gets Users from the database
