@@ -5,6 +5,7 @@ export default {
 			username: '',
 			errormsg: null,
 			loading: false,
+			newaccount: false,
 		};
 	},
 	methods: {
@@ -14,14 +15,17 @@ export default {
 			try {
 				const response = await this.$axios.post('/session', { username: this.username });
 				if (response.status === 201) {
-					alert('Account created and logged in successfully!');
-				} else if (response.status === 200) {
-					alert('Logged in successfully!');
+					this.newaccount = true;
 				}
-				// Store the token in localStorage
+				// Store the token and profile picture in localStorage
 				const token = response.data.id;
+				const profilePicture = response.data.profilePicture;
+				localStorage.token = token;
 				localStorage.setItem('token', token);
-				//this.$router.push('/users'); // Redirect to home page after login
+				localStorage.setItem('profilePicture', profilePicture);
+
+				// Redirect to the home page
+				this.$router.push('/');
 			} catch (e) {
 				this.errormsg = e.response ? e.response.data : e.toString();
 			}

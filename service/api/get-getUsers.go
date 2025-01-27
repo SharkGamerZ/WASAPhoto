@@ -16,7 +16,7 @@ func (rt *_router) GetUsers(w http.ResponseWriter, r *http.Request, ps httproute
 	// If a username is passed, gets the specific user
 	if username != "" {
 		// Get the user by username
-		user, err := rt.db.GetUsersByUsername(username)
+		user, err := rt.db.GetUsersByUsername(username, ctx.UserID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -33,7 +33,7 @@ func (rt *_router) GetUsers(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 
 	// If no username is passed, get all users
-	users, err := rt.db.GetUsers()
+	users, err := rt.db.GetUsers(ctx.UserID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -5,58 +5,53 @@ export default {
 			user: null,
 			errormsg: null,
 			loading: false,
-			username: '',
-			followed: false,
-			followers: 0,
-			followings: 0,
+			newBio: '',
+			newProfilePicture: null,
 		};
 	},
 	methods: {
-		async fetchUser(userId) {
+		async fetchUser() {
 			this.loading = true;
 			this.errormsg = null;
 			try {
-				let response = await this.$axios.get(`/users/${userId}`);
+				let response = await this.$axios.get('/me');
 				this.user = response.data;
-				this.username = response.data.username;
-				this.followed = response.data.followed; // Assuming the API returns this info
-				this.followers = response.data.followers;
-				this.followings = response.data.followings;
+				this.newBio = this.user.bio;
 			} catch (e) {
 				this.errormsg = e.toString();
 			}
 			this.loading = false;
 		},
-		async toggleFollow() {
-			const token = localStorage.getItem('token')
-			if (this.followed) {
-				await this.$axios.delete(`/users/${token}/following/${this.$route.params.id}`);
-				this.followers -= 1;
-			} else {
-				await this.$axios.put(`/users/${token}/following/${this.$route.params.id}`);
-				this.followers += 1;
+		async updateProfile() {
+			this.loading = true;
+			this.errormsg = null;
+			try {
+				let formData = new FormData();
+				formData.append('bio', this.newBio);
+				if (this.newProfilePicture) {
+					formData.append('profilePicture', this.newProfilePicture);
+				}
+				await this.$axios.put('/me', formData);
+				alert('Profile updated successfully!');
+				this.fetchUser();
+			} catch (e) {
+				this.errormsg = e.toString();
 			}
-			this.followed = !this.followed;
+			this.loading = false;
+		},
+		handleFileUpload(event) {
+			this.newProfilePicture = event.target.files[0];
 		},
 	},
 	mounted() {
-		const userId = this.$route.params.id; // Assuming the route provides a user ID
-		this.fetchUser(userId);
+		this.fetchUser();
 	},
-	watch: {
-		'$route.params.id': function (newId) {
-			// Checks if we are on a user page and the ID has changed
-			if (this.$route.fullPath.startsWith('/users/') && newId !== this.user.id) {
-				this.fetchUser(newId);
-			}
-		}
-	}
 };
 </script>
 
 <template>
 	<div>
-		<h1>{{ username }}</h1>
+		<h1>My Profile</h1>
 		<LoadingSpinner v-if="loading" />
 		<ErrorMsg v-if="errormsg" :msg="errormsg" />
 		<div v-if="user" class="user-card">
@@ -66,17 +61,16 @@ export default {
 					<p><strong>{{ user.name }}</strong></p>
 					<p>{{ user.email }}</p>
 					<div class="stats">
-						<span>{{ this.followers }} Followers</span>
-						<span>{{ this.followings }} Following</span>
+						<span>{{ user.followers }} Followers</span>
+						<span>{{ user.following }} Following</span>
 						<span>{{ user.posts }} Posts</span>
 					</div>
 				</div>
 			</div>
 			<div class="user-bio">
-				<p>{{ user.bio }}</p>
-				<button @click="toggleFollow">
-					{{ followed ? 'Unfollow' : 'Follow' }}
-				</button>
+				<textarea v-model="newBio" placeholder="Update your bio"></textarea>
+				<input type="file" @change="handleFileUpload" />
+				<button @click="updateProfile">Update Profile</button>
 			</div>
 			<div class="user-photos">
 				<div v-for="photo in user.photos" :key="photo.id" class="photo">
@@ -88,23 +82,6 @@ export default {
 </template>
 
 <style>
-.user-details {
-	display: flex;
-	align-items: center;
-}
-
-.profile-pic {
-	width: 50px;
-	height: 50px;
-	border-radius: 50%;
-	margin-right: 10px;
-}
-
-.user-info {
-	display: flex;
-	flex-direction: column;
-}
-
 .user-card {
 	max-width: 600px;
 	margin: 0 auto;
@@ -143,9 +120,14 @@ export default {
 
 .user-bio {
 	display: flex;
-	justify-content: space-between;
-	align-items: center;
+	flex-direction: column;
 	margin-bottom: 20px;
+}
+
+.user-bio textarea {
+	width: 100%;
+	height: 100px;
+	margin-bottom: 10px;
 }
 
 .user-photos {

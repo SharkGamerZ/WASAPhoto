@@ -1,4 +1,4 @@
-import { createApp, reactive } from 'vue'
+import { createApp, reactive, ref } from 'vue'
 import App from './App.vue'
 import router from './router'
 import axios from './services/axios.js';
@@ -8,7 +8,12 @@ import LoadingSpinner from './components/LoadingSpinner.vue'
 import './assets/dashboard.css'
 import './assets/main.css'
 
-const app = createApp(App)
+const isLoggedIn = ref(!!localStorage.getItem('token'));
+const userProfilePicture = ref(localStorage.getItem('profilePicture') || '');
+
+const app = createApp(App);
+app.provide('isLoggedIn', isLoggedIn);
+app.provide('userProfilePicture', userProfilePicture);
 
 // const cors = require('cors');
 /// In webui/src/main.js or a similar setup file
@@ -24,10 +29,6 @@ axios.interceptors.request.use(config => {
 	return Promise.reject(error);
 });
 
-// Store the user ID after login
-function storeUserId(userId) {
-	localStorage.setItem('userId', userId);
-}
 
 // Example usage after a successful login
 // storeUserId(response.data.userID);/ app.use(cors());
@@ -36,4 +37,5 @@ app.config.globalProperties.$axios = axios;
 app.component("ErrorMsg", ErrorMsg);
 app.component("LoadingSpinner", LoadingSpinner);
 app.use(router)
-app.mount('#app')
+app.mount('#app');
+

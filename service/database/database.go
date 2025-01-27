@@ -42,15 +42,15 @@ import (
 type AppDatabase interface {
 	// User
 	ExistsName(username string) (bool, error)
-	GetUserById(userID int) (_struct.User, error)
-	GetUsersByUsername(username string) ([]_struct.User, error)
-	GetUsers() ([]_struct.User, error)
+	GetUserById(userID int, requesterID int) (_struct.User, error)
+	GetUsersByUsername(username string, requesterID int) ([]_struct.User, error)
+	GetUsers(requesterID int) ([]_struct.User, error)
 	GetMyStream(userID int) ([]_struct.Photo, error)
 
-	CreateUser(_struct.User) (int, error)
-	DeleteUser(UserID int) error
+	CreateUser(user _struct.User) (int, error)
+	DeleteUser(userID int) error
 
-	UpdateUsername(UserID int, username string) error
+	UpdateUsername(userID int, username string) error
 
 	// Follows
 	FollowUser(follower int, followed int) error
@@ -65,9 +65,9 @@ type AppDatabase interface {
 
 	// Photos
 	CreatePhoto(photo _struct.Photo) error
-	GetUserPhotos(id int) ([]_struct.Photo, error)
-	GetPhotoById(userid int, photoid int) (_struct.Photo, error)
-	DeletePhoto(userid int, photoid int) error
+	GetUserPhotos(userID int) ([]_struct.Photo, error)
+	GetPhotoById(userID int, photoID int) (_struct.Photo, error)
+	DeletePhoto(userID int, photoID int) error
 
 	// Likes
 	LikePhoto(like _struct.Like) error

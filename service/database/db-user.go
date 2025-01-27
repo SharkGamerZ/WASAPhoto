@@ -17,14 +17,35 @@ func (db *appdbimpl) ExistsName(username string) (bool, error) {
 }
 
 // Gets user from DB
-func (db *appdbimpl) GetUserById(userID int) (_struct.User, error) {
+func (db *appdbimpl) GetUserById(userID int, requesterID int) (_struct.User, error) {
 	var user _struct.User
 	err := db.c.QueryRow(`SELECT id, username FROM USERS WHERE id= ?;`, userID).Scan(&user.UserID, &user.Username)
+	if err != nil {
+		return user, err
+	}
+
+	// Check if the requester follows the user
+	err = db.c.QueryRow(`SELECT EXISTS(SELECT 1 FROM FOLLOWERS WHERE follower_id = ? AND followed_id = ?)`, requesterID, userID).Scan(&user.Followed)
+	if err != nil {
+		return user, err
+	}
+
+	// Gets the number of followers
+	err = db.c.QueryRow(`SELECT COUNT(*) FROM FOLLOWERS WHERE followed_id = ?`, userID).Scan(&user.Followers)
+	if err != nil {
+		return user, err
+	}
+
+	// Gets the number of followings
+	err = db.c.QueryRow(`SELECT COUNT(*) FROM FOLLOWERS WHERE follower_id = ?`, userID).Scan(&user.Followings)
+	if err != nil {
+		return user, err
+	}
 	return user, err
 }
 
 // Gets users from DB by username
-func (db *appdbimpl) GetUsersByUsername(username string) ([]_struct.User, error) {
+func (db *appdbimpl) GetUsersByUsername(username string, requesterID int) ([]_struct.User, error) {
 	rows, err := db.c.Query(`SELECT id, username FROM USERS WHERE username LIKE ?;`, "%"+username+"%")
 	if err != nil {
 		return nil, err
@@ -38,6 +59,13 @@ func (db *appdbimpl) GetUsersByUsername(username string) ([]_struct.User, error)
 		if err != nil {
 			return nil, err
 		}
+
+		// Check if the requester follows the user
+		err = db.c.QueryRow(`SELECT EXISTS(SELECT 1 FROM FOLLOWERS WHERE follower_id = ? AND followed_id = ?)`, requesterID, user.UserID).Scan(&user.Followed)
+		if err != nil {
+			return nil, err
+		}
+
 		users = append(users, user)
 	}
 
@@ -49,7 +77,7 @@ func (db *appdbimpl) GetUsersByUsername(username string) ([]_struct.User, error)
 }
 
 // Gets Users from the database
-func (db *appdbimpl) GetUsers() ([]_struct.User, error) {
+func (db *appdbimpl) GetUsers(requesterID int) ([]_struct.User, error) {
 	rows, err := db.c.Query("SELECT id, username FROM USERS")
 	if err != nil {
 		return nil, err
@@ -63,6 +91,13 @@ func (db *appdbimpl) GetUsers() ([]_struct.User, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		// Check if the requester follows the user
+		err = db.c.QueryRow(`SELECT EXISTS(SELECT 1 FROM FOLLOWERS WHERE follower_id = ? AND followed_id = ?)`, requesterID, user.UserID).Scan(&user.Followed)
+		if err != nil {
+			return nil, err
+		}
+
 		users = append(users, user)
 	}
 

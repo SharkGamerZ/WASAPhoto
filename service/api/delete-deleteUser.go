@@ -29,7 +29,7 @@ func (rt *_router) deleteUser(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	// Checks if user exists
-	_, err = rt.db.GetUserById(userID)
+	_, err = rt.db.GetUserById(userID, ctx.UserID)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return

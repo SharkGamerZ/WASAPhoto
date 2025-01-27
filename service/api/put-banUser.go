@@ -33,7 +33,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// Checks if user exists
-	_, err = rt.db.GetUserById(banned)
+	_, err = rt.db.GetUserById(banned, ctx.UserID)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "User does not exist", http.StatusNotFound)
 	}

@@ -32,7 +32,7 @@ func (rt *_router) GetUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	// Gets the user profile
-	user, err := rt.db.GetUserById(userID)
+	user, err := rt.db.GetUserById(userID, ctx.UserID)
 
 	// If user doesn't exist
 	if errors.Is(err, sql.ErrNoRows) {

@@ -2,7 +2,18 @@
 import { RouterLink, RouterView } from 'vue-router'
 </script>
 <script>
-export default {}
+export default {
+	methods: {
+		async handleButton() {
+			const token = localStorage.getItem('token');
+			if (token === 'undefined' || token === null) {
+				this.$router.push('/session');
+			} else {
+				this.$router.push(`/users/${token}`);
+			}
+		}
+	},
+}
 </script>
 
 <template>
@@ -14,6 +25,12 @@ export default {}
 			aria-label="Toggle navigation">
 			<span class="navbar-toggler-icon"></span>
 		</button>
+		<div class="navbar-nav ms-auto">
+			<button @click="handleButton()" class="nav-link btn btn-link">
+				<img :src="loginButtonIcon" alt="User Icon" class="user-icon" />
+				{{ loginButtonText }}
+			</button>
+		</div>
 	</header>
 
 	<div class="container-fluid">
@@ -26,7 +43,7 @@ export default {}
 					</h6>
 					<ul class="nav flex-column">
 						<li class="nav-item">
-							<RouterLink to="/getMyStream/1" class="nav-link">
+							<RouterLink to="/" class="nav-link">
 								<svg class="feather">
 									<use href="/feather-sprite-v4.29.0.svg#home" />
 								</svg>
@@ -53,4 +70,11 @@ export default {}
 	</div>
 </template>
 
-<style></style>
+<style>
+.user-icon {
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	margin-right: 10px;
+}
+</style>

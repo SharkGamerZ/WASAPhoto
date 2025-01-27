@@ -50,8 +50,10 @@ export default {
 			<input type="text" class="form-control" id="search" v-model="searchQuery" @input="fetchUsers"
 				placeholder="Enter username" />
 		</div>
+
 		<ul class="list-group">
-			<li v-for="user in users" :key="user.userID" class="list-group-item d-flex align-items-center">
+			<li v-for="user in users" :key="user.userID" class="list-group-item d-flex align-items-center"
+				@click="$router.push(`/users/${user.userID}`)" style="cursor: pointer;">
 				<img :src="user.propic" alt="Profile Picture" class="img-thumbnail rounded-circle" width="50"
 					height="50" />
 				<h5 class="ms-3">{{ user.username }}</h5>
@@ -71,4 +73,3 @@ export default {
 	margin-right: 15px;
 }
 </style>
-

@@ -52,3 +52,17 @@ func (db *appdbimpl) GetFollowings(userID int) ([]_struct.User, error) {
 
 	return users, nil
 }
+
+// CountFollowers returns the number of followers of a user
+func (db *appdbimpl) CountFollowers(userID int) (int, error) {
+	var count int
+	err := db.c.QueryRow("SELECT COUNT(*) FROM FOLLOWERS WHERE followed_id = ?", userID).Scan(&count)
+	return count, err
+}
+
+// CountFollowings returns the number of followings of a user
+func (db *appdbimpl) CountFollowings(userID int) (int, error) {
+	var count int
+	err := db.c.QueryRow("SELECT COUNT(*) FROM FOLLOWERS WHERE follower_id = ?", userID).Scan(&count)
+	return count, err
+}

@@ -44,7 +44,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	// Checks if user exists
-	_, err = rt.db.GetUserById(followed)
+	_, err = rt.db.GetUserById(followed, ctx.UserID)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "User does not exist", http.StatusNotFound)
 	}
