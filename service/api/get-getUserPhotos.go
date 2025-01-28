@@ -34,7 +34,7 @@ func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	// Get the photos of the user
-	photos, err := rt.db.GetUserPhotos(userID)
+	photos, err := rt.db.GetUserPhotos(userID, ctx.UserID)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "User has no posts", http.StatusNotFound)
 		return

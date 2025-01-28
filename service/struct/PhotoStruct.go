@@ -6,4 +6,5 @@ type Photo struct {
 	Photo     string `json:"photo"`
 	Caption   string `json:"caption"`
 	Timestamp string `json:"timestamp"`
+	Liked     bool   `json:"liked"`
 }

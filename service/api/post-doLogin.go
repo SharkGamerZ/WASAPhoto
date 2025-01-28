@@ -62,6 +62,27 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	} else {
 		// If user exists, return OK
 		w.WriteHeader(http.StatusOK)
+		// Return the ID of the user
+		var id int
+		users, err := rt.db.GetUsersByUsername(user.Username, 0)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		id = users[0].UserID
+
+		err = json.NewEncoder(w).Encode(struct {
+			ID int `json:"id"`
+		}{
+			ID: id,
+		})
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 }

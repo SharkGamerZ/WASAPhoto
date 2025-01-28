@@ -24,6 +24,8 @@ export default {
 				localStorage.setItem('token', token);
 				localStorage.setItem('profilePicture', profilePicture);
 
+				console.log('Logged in with token:', token);
+
 				// Redirect to the home page
 				this.$router.push('/');
 			} catch (e) {
@@ -31,7 +33,7 @@ export default {
 			}
 			this.loading = false;
 		},
-	},
+	}
 };
 </script>
 

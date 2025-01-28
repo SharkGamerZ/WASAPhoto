@@ -38,22 +38,38 @@ func (db *appdbimpl) GetLastPhotoIDOfUser(userid int) (int, error) {
 }
 
 // GetUserPhotos returns the photos of a user.
-func (db *appdbimpl) GetUserPhotos(id int) ([]_struct.Photo, error) {
-	rows, err := db.c.Query("SELECT * FROM photos WHERE user_id = ?", id)
+func (db *appdbimpl) GetUserPhotos(id int, viewerID int) ([]_struct.Photo, error) {
+	const query = `
+		SELECT p.id, p.user_id, p.photo, p.caption, p.timestamp,
+			   CASE WHEN l.user_id IS NOT NULL THEN 1 ELSE 0 END as liked
+		FROM photos p
+		LEFT JOIN likes l ON p.id = l.photo_id AND l.user_id = ?
+		WHERE p.user_id = ?
+		ORDER BY p.timestamp DESC
+	`
+
+	rows, err := db.c.Query(query, viewerID, id)
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
 
 	var photos []_struct.Photo
 	for rows.Next() {
 		var photo _struct.Photo
-
-		err = rows.Scan(&photo.PhotoID, &photo.UserID, &photo.Photo, &photo.Caption, &photo.Timestamp)
+		var liked int
+		err = rows.Scan(
+			&photo.PhotoID,
+			&photo.UserID,
+			&photo.Photo,
+			&photo.Caption,
+			&photo.Timestamp,
+			&liked,
+		)
 		if err != nil {
 			return nil, err
 		}
+		photo.Liked = liked == 1
 		photos = append(photos, photo)
 	}
 
@@ -65,14 +81,30 @@ func (db *appdbimpl) GetUserPhotos(id int) ([]_struct.Photo, error) {
 }
 
 // GetPhotoById returns the photo with the given id.
-func (db *appdbimpl) GetPhotoById(userid int, photoid int) (_struct.Photo, error) {
-	var photo _struct.Photo
+func (db *appdbimpl) GetPhotoById(userid int, photoid int, viewerID int) (_struct.Photo, error) {
+	const query = `
+		SELECT p.id, p.user_id, p.photo, p.caption, p.timestamp,
+			   CASE WHEN l.user_id IS NOT NULL THEN 1 ELSE 0 END as liked
+		FROM photos p
+		LEFT JOIN likes l ON p.id = l.photo_id AND l.user_id = ?
+		WHERE p.user_id = ? AND p.id = ?
+	`
 
-	err := db.c.QueryRow("SELECT * FROM photos WHERE user_id = ? AND id = ?", userid, photoid).Scan(&photo.PhotoID, &photo.UserID, &photo.Photo, &photo.Caption, &photo.Timestamp)
+	var photo _struct.Photo
+	var liked int
+	err := db.c.QueryRow(query, viewerID, userid, photoid).Scan(
+		&photo.PhotoID,
+		&photo.UserID,
+		&photo.Photo,
+		&photo.Caption,
+		&photo.Timestamp,
+		&liked,
+	)
 	if err != nil {
 		return photo, err
 	}
 
+	photo.Liked = liked == 1
 	return photo, nil
 }
 

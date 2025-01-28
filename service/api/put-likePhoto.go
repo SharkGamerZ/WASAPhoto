@@ -51,7 +51,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	// Checks if the photo exists
-	_, err = rt.db.GetPhotoById(photoOwnerID, photoID)
+	_, err = rt.db.GetPhotoById(photoOwnerID, photoID, ctx.UserID)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "Photo not found", http.StatusNotFound)
 		return

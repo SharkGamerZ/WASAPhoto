@@ -28,7 +28,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Checks if the user is the owner of the photo
-	photo, err := rt.db.GetPhotoById(userID, photoID)
+	photo, err := rt.db.GetPhotoById(userID, photoID, ctx.UserID)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "Photo not found", http.StatusNotFound)
 		return

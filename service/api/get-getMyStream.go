@@ -24,7 +24,7 @@ func (rt *_router) GetMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	// Get the user's stream
+	// Get the user's stream with liked status
 	photos, err := rt.db.GetMyStream(ctx.UserID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

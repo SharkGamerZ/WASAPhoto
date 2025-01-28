@@ -8,4 +8,5 @@ type User struct {
 	Followed   bool   `json:"followed"`
 	Followers  int    `json:"followers"`
 	Followings int    `json:"followings"`
+	PostNum    int    `json:"postNum"`
 }

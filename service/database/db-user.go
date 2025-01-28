@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/SharkGamerZ/WASAPhoto/service/struct"
+	_struct "github.com/SharkGamerZ/WASAPhoto/service/struct"
 )
 
 // Checks if user exists in the database
@@ -38,6 +38,12 @@ func (db *appdbimpl) GetUserById(userID int, requesterID int) (_struct.User, err
 
 	// Gets the number of followings
 	err = db.c.QueryRow(`SELECT COUNT(*) FROM FOLLOWERS WHERE follower_id = ?`, userID).Scan(&user.Followings)
+	if err != nil {
+		return user, err
+	}
+
+	// Gets the number of posts
+	err = db.c.QueryRow(`SELECT COUNT(*) FROM PHOTOS WHERE user_id = ?`, userID).Scan(&user.PostNum)
 	if err != nil {
 		return user, err
 	}
@@ -167,7 +173,8 @@ func (db *appdbimpl) GetMyStream(userID int) ([]_struct.Photo, error) {
 			continue
 		}
 
-		userPhotos, err := db.GetUserPhotos(currentUserID)
+		// Pass the userID as viewerID to check for likes
+		userPhotos, err := db.GetUserPhotos(currentUserID, userID)
 		if err != nil {
 			return nil, err
 		}

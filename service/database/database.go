@@ -65,8 +65,8 @@ type AppDatabase interface {
 
 	// Photos
 	CreatePhoto(photo _struct.Photo) error
-	GetUserPhotos(userID int) ([]_struct.Photo, error)
-	GetPhotoById(userID int, photoID int) (_struct.Photo, error)
+	GetUserPhotos(userID int, viewerID int) ([]_struct.Photo, error)
+	GetPhotoById(userID int, photoID int, viewerID int) (_struct.Photo, error)
 	DeletePhoto(userID int, photoID int) error
 
 	// Likes

@@ -40,7 +40,7 @@ func (rt *_router) getPhotoById(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	// Get the photo
-	photo, err := rt.db.GetPhotoById(photoOwnerID, photoID)
+	photo, err := rt.db.GetPhotoById(photoOwnerID, photoID, ctx.UserID)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "Photo not found", http.StatusNotFound)
 		return
