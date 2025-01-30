@@ -57,14 +57,15 @@ func (rt *_router) createPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Get the caption from the form
-	caption := r.FormValue("description")
+	caption := r.FormValue("caption")
 
 	// Create the photo
 	var photo _struct.Photo
 	photo.UserID = url_id
 	photo.Photo = base64.StdEncoding.EncodeToString(fileBytes)
 	photo.Caption = caption
-	photo.Timestamp = time.Now().Format("2025-01-01 00:00:00")
+	// photo.Timestamp = time.Now().Format("2025-01-01 00:00:00")
+	photo.Timestamp = time.Now().Format("2006-01-02 15:04:05")
 
 	// Saves the photo in the database
 	err = rt.db.CreatePhoto(photo)

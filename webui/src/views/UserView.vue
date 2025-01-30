@@ -1,5 +1,16 @@
 <script>
+import Profiles from '@/components/Profiles.vue'
+import PhotoCard from '@/components/PhotoCard.vue'
+import FloatingPhotoCard from '@/components/FloatingPhotoCard.vue'
+import CommentList from '@/components/CommentList.vue'
+
 export default {
+	components: {
+		Profiles,
+		PhotoCard,
+		FloatingPhotoCard,
+		CommentList
+	},
 	data() {
 		return {
 			user: null,
@@ -12,6 +23,13 @@ export default {
 			photos: [],
 			isFollowing: false,
 			showMenu: false,
+			showFollowers: false,
+			showFollowing: false,
+			followersList: [],
+			followingList: [],
+			showPropicUpload: false,
+			selectedPhotoIndex: null,
+			currentComments: [],
 		};
 	},
 	computed: {
@@ -65,6 +83,8 @@ export default {
 			this.$router.push('/session');
 		},
 
+
+		
 		editProfile() {
 		},
 
@@ -76,6 +96,102 @@ export default {
 			if (!event.target.closest('.menu-container')) {
 				this.showMenu = false;
 			}
+		},
+
+		async fetchFollowers() {
+			try {
+				const response = await this.$axios.get(`/users/${this.$route.params.id}/followers`);
+				this.followersList = response.data || [];
+				this.showFollowers = true;
+			} catch (e) {
+				this.errormsg = e.toString();
+				this.followersList = [];
+			}
+		},
+
+		async fetchFollowing() {
+			try {
+				const response = await this.$axios.get(`/users/${this.$route.params.id}/following`);
+				this.followingList = response.data || [];
+				this.showFollowing = true;
+			} catch (e) {
+				this.errormsg = e.toString();
+				this.followingList = [];
+			}
+		},
+
+		async updatePropic(event) {
+			const file = event.target.files[0];
+			if (!file) return;
+
+			const formData = new FormData();
+			formData.append('propic', file);
+
+			try {
+				await this.$axios.put(`/users/${this.user.user_id}/propic`, formData, {
+					headers: {
+						'Content-Type': 'multipart/form-data'
+					}
+				});
+				// Refresh user data to get new propic
+				await this.fetchUser(this.user.user_id);
+			} catch (e) {
+				this.errormsg = e.toString();
+			}
+		},
+
+		triggerPropicUpload() {
+			document.getElementById('propic-upload').click();
+		},
+
+		async openPhotoModal(index) {
+			this.selectedPhotoIndex = index;
+			document.body.classList.add('modal-open');
+			await this.fetchPhotoComments(this.photos[index].photoID);
+		},
+		closePhotoModal() {
+			this.selectedPhotoIndex = null;
+			document.body.classList.remove('modal-open');
+		},
+		async navigatePhoto(direction) {
+			const newIndex = this.selectedPhotoIndex + direction;
+			if (newIndex >= 0 && newIndex < this.photos.length) {
+				this.selectedPhotoIndex = newIndex;
+				// Fetch comments for the new photo
+				await this.fetchPhotoComments(this.photos[newIndex].photoID);
+			}
+		},
+		async handleLike(photo) {
+			const token = localStorage.getItem('token');
+			try {
+				if (photo.liked) {
+					await this.$axios.delete(`/users/${token}/likes/${photo.photoID}`);
+					photo.likes--;
+				} else {
+					await this.$axios.put(`/users/${token}/likes/${photo.photoID}`);
+					photo.likes++;
+				}
+				photo.liked = !photo.liked;
+			} catch (e) {
+				console.error('Error toggling like:', e);
+			}
+		},
+		async fetchPhotoComments(photoId) {
+			try {
+				const response = await this.$axios.get(`/users/${this.user.user_id}/photos/${photoId}/comments`);
+				this.currentComments = response.data || [];
+			} catch (e) {
+				console.error('Error fetching comments:', e);
+			}
+		},
+		async handleComment(comment) {
+			// Add the comment to the current comments immediately
+			this.currentComments.push({
+				id: comment.id,
+				user_id: comment.user_id,
+				content: comment.content,
+				timestamp: comment.timestamp
+			});
 		}
 	},
 	mounted() {
@@ -111,7 +227,21 @@ export default {
 			<div class="user-header">
 				<div class="profile-main">
 					<div class="profile-image-container">
-						<img :src="'data:image/png;base64,' + user.propic" alt="Profile Picture" class="profile-pic" />
+						<div class="propic-wrapper" :class="{ 'can-edit': isOwnProfile }">
+							<img :src="'data:image/png;base64,' + user.propic" alt="Profile Picture" class="profile-pic" />
+							<div v-if="isOwnProfile" 
+								 class="edit-overlay"
+								 @click="triggerPropicUpload">
+								<svg class="feather edit-icon">
+									<use href="/feather-sprite-v4.29.0.svg#edit-2" />
+								</svg>
+							</div>
+						</div>
+						<input type="file"
+							   id="propic-upload"
+							   accept="image/*"
+							   @change="updatePropic"
+							   style="display: none" />
 					</div>
 
 					<div class="profile-info">
@@ -152,11 +282,11 @@ export default {
 								<span class="stat-value">{{ posts }}</span>
 								<span class="stat-label">Posts</span>
 							</div>
-							<div class="stat-item">
+							<div class="stat-item clickable" @click="fetchFollowers">
 								<span class="stat-value">{{ followers }}</span>
 								<span class="stat-label">Followers</span>
 							</div>
-							<div class="stat-item">
+							<div class="stat-item clickable" @click="fetchFollowing">
 								<span class="stat-value">{{ followings }}</span>
 								<span class="stat-label">Following</span>
 							</div>
@@ -174,7 +304,10 @@ export default {
 				<h2 class="section-title">Photos</h2>
 				<div class="user-photos">
 					<template v-if="photos && photos.length > 0">
-						<div v-for="photo in photos" :key="photo.id" class="photo-card">
+						<div v-for="(photo, index) in photos" 
+							 :key="photo.id" 
+							 class="photo-card"
+							 @click="openPhotoModal(index)">
 							<img :src="'data:image/jpeg;base64, ' + photo.photo" alt="User Photo" />
 						</div>
 					</template>
@@ -186,6 +319,32 @@ export default {
 					</div>
 				</div>
 			</div>
+		</div>
+
+		<Profiles 
+			:users="followersList || []"
+			title="Followers"
+			:show="showFollowers"
+			@close="showFollowers = false"
+		/>
+		
+		<Profiles 
+			:users="followingList || []"
+			title="Following"
+			:show="showFollowing"
+			@close="showFollowing = false"
+		/>
+
+		<!-- Photo Modal -->
+		<div v-if="selectedPhotoIndex !== null" class="photo-modal" @click.self="closePhotoModal">
+			<FloatingPhotoCard
+				:post="photos[selectedPhotoIndex]"
+				:username="username"
+				:user-pro-pic="user.propic"
+				:user-id="user.user_id"
+				@like="handleLike"
+				@navigate="navigatePhoto"
+			/>
 		</div>
 	</div>
 </template>
@@ -215,6 +374,39 @@ export default {
 
 .profile-image-container {
 	flex-shrink: 0;
+}
+
+.propic-wrapper {
+	position: relative;
+	width: 150px;
+	height: 150px;
+	border-radius: 50%;
+}
+
+.propic-wrapper.can-edit:hover .edit-overlay {
+	opacity: 1;
+}
+
+.edit-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	border-radius: 50%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	cursor: pointer;
+}
+
+.edit-icon {
+	width: 24px;
+	height: 24px;
+	stroke: white;
 }
 
 .profile-pic {
@@ -403,5 +595,116 @@ export default {
 	width: 20px;
 	height: 20px;
 	stroke: currentColor;
+}
+
+.stat-item.clickable {
+	cursor: pointer;
+	transition: opacity 0.2s;
+}
+
+.stat-item.clickable:hover {
+	opacity: 0.8;
+}
+
+.photo-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.8);
+	backdrop-filter: blur(8px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+	padding: 20px;
+}
+
+.photo-modal-content {
+	width: 90vw;
+	max-width: 1400px;
+	height: 90vh;
+	position: relative;
+	background: white;
+	border-radius: 12px;
+	overflow: hidden;
+}
+
+.nav-button {
+	background: white;
+	border: none;
+	border-radius: 50%;
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	transition: all 0.2s ease;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.nav-button:hover {
+	background: #f8f9fa;
+	transform: translateY(-50%) scale(1.1);
+}
+
+.nav-button.prev {
+	left: 20px;
+}
+
+.nav-button.next {
+	right: 20px;
+}
+
+.nav-button .feather {
+	width: 24px;
+	height: 24px;
+	stroke: #333;
+}
+
+/* Move hover effect only to grid view photos */
+.user-photos .photo-card {
+	cursor: pointer;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.user-photos .photo-card:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Remove hover effects from modal */
+.photo-modal-content .photo-card {
+	transform: none;
+	transition: none;
+	box-shadow: none;
+}
+
+.photo-modal-content .photo-card:hover {
+	transform: none;
+	box-shadow: none;
+}
+
+/* Ensure modal scrollbar matches design */
+.photo-modal-content::-webkit-scrollbar {
+	width: 8px;
+}
+
+.photo-modal-content::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.photo-modal-content::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: 4px;
+}
+
+.photo-modal-content::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.3);
 }
 </style>

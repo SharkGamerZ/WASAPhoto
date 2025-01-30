@@ -47,7 +47,10 @@ func (db *appdbimpl) UnlikePhoto(like _struct.Like) error {
 
 // GetLikes returns a list of users who liked a photo
 func (db *appdbimpl) GetLikes(ownerID, photoID int) ([]_struct.User, error) {
-	rows, err := db.c.Query("SELECT user_id FROM LIKES WHERE owner_id = ? AND photo_id = ?", ownerID, photoID)
+	rows, err := db.c.Query(`SELECT user_id, propic, username
+							FROM LIKES, USERS
+							WHERE owner_id = ? AND photo_id = ?
+							AND LIKES.owner_id = USERS.id`, ownerID, photoID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +61,7 @@ func (db *appdbimpl) GetLikes(ownerID, photoID int) ([]_struct.User, error) {
 	for rows.Next() {
 		var user _struct.User
 
-		err = rows.Scan(&user.UserID)
+		err = rows.Scan(&user.UserID, &user.Propic, &user.Username)
 		if err != nil {
 			return nil, err
 		}

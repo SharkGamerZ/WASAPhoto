@@ -120,7 +120,7 @@ components:
       example: 17
       readOnly: true
 
-    PostDescription:
+    PostCaption:
       description: "The description of a post"
       type: string
       example: "Me at the zoo"
@@ -170,7 +170,7 @@ components:
       properties:
         id: {$ref: "#/components/schemas/PostId"}
         user_id: {$ref: "#/components/schemas/UserId"}
-        description: {$ref: "#/components/schemas/PostDescription"}
+        description: {$ref: "#/components/schemas/PostCaption"}
         photo: {$ref: "#/components/schemas/PostPhoto"}
         timestamp: {$ref: "#/components/schemas/Timestamp"}
 
@@ -575,7 +575,7 @@ paths:
               type: object
               description: Post to add
               properties:
-                description: { $ref: "#/components/schemas/PostDescription" }
+                description: { $ref: "#/components/schemas/PostCaption" }
                 photo: { $ref: "#/components/schemas/PostPhoto" }
       responses:
         "201":
@@ -849,4 +849,30 @@ paths:
           description: Profile picture changed.
         "401":
           description: Unauthorized. This is not your profile.
+        "404": {$ref: "#/components/responses/NotFound"}
+
+  /users/{user_id}/followers:
+    parameters:
+        - {$ref: "#/components/parameters/user_id"}
+    get:
+      tags: ["user following"]
+      operationId: getFollowers
+      summary: Get list of followers
+      description: |
+        Returns the users that follow the user with the specified ID
+      responses:
+        "200":
+          description: List of followers.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Array of users following the "user_id" User
+                properties:
+                  followers:
+                    type: array
+                    items: { $ref: "#/components/schemas/User"}
+                    description: Array of users
+                    minItems: 0
+                    maxItems: 999999999
         "404": {$ref: "#/components/responses/NotFound"}

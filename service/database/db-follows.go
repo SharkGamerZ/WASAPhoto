@@ -30,7 +30,7 @@ func (db *appdbimpl) UnfollowUser(follower int, followed int) error {
 }
 
 func (db *appdbimpl) GetFollowings(userID int) ([]_struct.User, error) {
-	rows, err := db.c.Query("SELECT followed_id, username FROM FOLLOWERS, USERS WHERE follower_id = ? AND followed_id = id", userID)
+	rows, err := db.c.Query("SELECT followed_id, username, propic FROM FOLLOWERS, USERS WHERE follower_id = ? AND followed_id = id", userID)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (db *appdbimpl) GetFollowings(userID int) ([]_struct.User, error) {
 	var users []_struct.User
 	for rows.Next() {
 		var user _struct.User
-		err = rows.Scan(&user.UserID, &user.Username)
+		err = rows.Scan(&user.UserID, &user.Username, &user.Propic)
 		if err != nil {
 			return nil, err
 		}
@@ -65,4 +65,28 @@ func (db *appdbimpl) CountFollowings(userID int) (int, error) {
 	var count int
 	err := db.c.QueryRow("SELECT COUNT(*) FROM FOLLOWERS WHERE follower_id = ?", userID).Scan(&count)
 	return count, err
+}
+
+func (db *appdbimpl) GetFollowers(userID int) ([]_struct.User, error) {
+	rows, err := db.c.Query("SELECT follower_id, username, propic FROM FOLLOWERS, USERS WHERE followed_id = ? AND follower_id = id", userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []_struct.User
+	for rows.Next() {
+		var user _struct.User
+		err = rows.Scan(&user.UserID, &user.Username, &user.Propic)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	if rows.Err() != nil {
+		return nil, err
+	}
+
+	return users, nil
 }

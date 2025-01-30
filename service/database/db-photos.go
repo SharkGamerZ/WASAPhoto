@@ -70,6 +70,14 @@ func (db *appdbimpl) GetUserPhotos(id int, viewerID int) ([]_struct.Photo, error
 			return nil, err
 		}
 		photo.Liked = liked == 1
+
+		// Count the likes of the photo
+		query := "SELECT COUNT(*) FROM likes WHERE photo_id = ?"
+		err = db.c.QueryRow(query, photo.PhotoID).Scan(&photo.Likes)
+		if err != nil {
+			return nil, err
+		}
+
 		photos = append(photos, photo)
 	}
 

@@ -52,7 +52,8 @@ export default {
 		</div>
 
 		<ul class="user-list">
-			<li v-for="user in users" :key="user.user_id" class="user-item" @click="$router.push(`/users/${user.user_id}`)">
+			<li v-for="user in users" :key="user.user_id" class="user-item"
+				@click="$router.push(`/users/${user.user_id}`)">
 				<img :src="'data:image/png;base64,' + user.propic" alt="Profile Picture" class="profile-pic" />
 				<h5 class="username">{{ user.username }}</h5>
 			</li>

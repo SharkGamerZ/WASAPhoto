@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/SharkGamerZ/WASAPhoto/service/api/reqcontext"
 	_struct "github.com/SharkGamerZ/WASAPhoto/service/struct"
@@ -41,11 +42,14 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 	// Gets the comment from the body
 	var comment _struct.Comment
 
-	err = json.NewDecoder(r.Body).Decode(&comment)
+	err = json.NewDecoder(r.Body).Decode(&comment.Content)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	// Sets the comment's timestamp
+	comment.Timestamp = time.Now().Format("2006-01-02 15:04:05")
 
 	// Comments the photo
 	err = rt.db.CommentPhoto(photoOwnerID, photoID, comment, ctx.UserID)

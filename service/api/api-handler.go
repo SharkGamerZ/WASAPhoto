@@ -42,6 +42,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/users", rt.wrap(rt.GetUsers, true))
 	rt.router.GET("/users/:id", rt.wrap(rt.GetUserProfile, true))
 	rt.router.GET("/users/:id/following", rt.wrap(rt.getFollowings, true))
+	rt.router.GET("/users/:id/followers", rt.wrap(rt.getFollowers, true))
 	rt.router.GET("/users/:id/banned", rt.wrap(rt.getBanneds, true))
 	rt.router.GET("/users/:id/photos", rt.wrap(rt.getUserPhotos, true))
 	rt.router.GET("/users/:id/photos/:photoid", rt.wrap(rt.getPhotoById, true))
