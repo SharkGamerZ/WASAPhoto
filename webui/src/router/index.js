@@ -11,7 +11,7 @@ const router = createRouter({
 		{
 			path: '/', redirect: () => {
 				const token = localStorage.getItem('token');
-				if (token === 'undefined') {
+				if (token === 'undefined' || token === null) {
 					return '/session';
 				} else {
 					return '/users/' + token + '/stream';

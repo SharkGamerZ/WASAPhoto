@@ -4,7 +4,10 @@ import (
 	// "database/sql"
 
 	"database/sql"
+	"encoding/base64"
 	"errors"
+	"io"
+	"os"
 
 	_struct "github.com/SharkGamerZ/WASAPhoto/service/struct"
 )
@@ -19,7 +22,7 @@ func (db *appdbimpl) ExistsName(username string) (bool, error) {
 // Gets user from DB
 func (db *appdbimpl) GetUserById(userID int, requesterID int) (_struct.User, error) {
 	var user _struct.User
-	err := db.c.QueryRow(`SELECT id, username FROM USERS WHERE id= ?;`, userID).Scan(&user.UserID, &user.Username)
+	err := db.c.QueryRow(`SELECT id, username, bio, propic FROM USERS WHERE id= ?;`, userID).Scan(&user.UserID, &user.Username, &user.Bio, &user.Propic)
 	if err != nil {
 		return user, err
 	}
@@ -52,7 +55,7 @@ func (db *appdbimpl) GetUserById(userID int, requesterID int) (_struct.User, err
 
 // Gets users from DB by username
 func (db *appdbimpl) GetUsersByUsername(username string, requesterID int) ([]_struct.User, error) {
-	rows, err := db.c.Query(`SELECT id, username FROM USERS WHERE username LIKE ?;`, "%"+username+"%")
+	rows, err := db.c.Query(`SELECT id, username, propic FROM USERS WHERE username LIKE ?;`, "%"+username+"%")
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +64,7 @@ func (db *appdbimpl) GetUsersByUsername(username string, requesterID int) ([]_st
 	var users []_struct.User
 	for rows.Next() {
 		var user _struct.User
-		err = rows.Scan(&user.UserID, &user.Username)
+		err = rows.Scan(&user.UserID, &user.Username, &user.Propic)
 		if err != nil {
 			return nil, err
 		}
@@ -84,7 +87,7 @@ func (db *appdbimpl) GetUsersByUsername(username string, requesterID int) ([]_st
 
 // Gets Users from the database
 func (db *appdbimpl) GetUsers(requesterID int) ([]_struct.User, error) {
-	rows, err := db.c.Query("SELECT id, username FROM USERS")
+	rows, err := db.c.Query("SELECT id, username, propic FROM USERS")
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +96,7 @@ func (db *appdbimpl) GetUsers(requesterID int) ([]_struct.User, error) {
 	var users []_struct.User
 	for rows.Next() {
 		var user _struct.User
-		err = rows.Scan(&user.UserID, &user.Username)
+		err = rows.Scan(&user.UserID, &user.Username, &user.Propic)
 		if err != nil {
 			return nil, err
 		}
@@ -116,12 +119,27 @@ func (db *appdbimpl) GetUsers(requesterID int) ([]_struct.User, error) {
 
 // Create a new user in the database
 func (db *appdbimpl) CreateUser(user _struct.User) (int, error) {
-	_, err := db.c.Exec("INSERT INTO USERS (username) VALUES (?)", user.Username)
+	// Open the default profile picture file
+	file, err := os.Open("assets/default.png")
+	if err != nil {
+		return 0, err
+	}
+	defer file.Close() // Ensure the file is closed when done
+
+	// Read the file contents
+	fileBytes, err := io.ReadAll(file)
 	if err != nil {
 		return 0, err
 	}
 
-	// Gets the ID of the user
+	// Encode the image to base64
+	defaultPropic := base64.StdEncoding.EncodeToString(fileBytes)
+
+	_, err = db.c.Exec("INSERT INTO USERS (username, propic) VALUES (?, ?)", user.Username, defaultPropic)
+	if err != nil {
+		return 0, err
+	}
+
 	var id int
 	err = db.c.QueryRow("SELECT id FROM USERS WHERE username = ?", user.Username).Scan(&id)
 	if err != nil {
@@ -140,6 +158,18 @@ func (db *appdbimpl) DeleteUser(userID int) error {
 // Changes the user's username
 func (db *appdbimpl) UpdateUsername(userID int, newUsername string) error {
 	_, err := db.c.Exec("UPDATE USERS SET username = ? WHERE id = ?", newUsername, userID)
+	return err
+}
+
+// Changes the user's bio
+func (db *appdbimpl) UpdateBio(userID int, newBio string) error {
+	_, err := db.c.Exec("UPDATE USERS SET bio = ? WHERE id = ?", newBio, userID)
+	return err
+}
+
+// Changes the user's profile picture
+func (db *appdbimpl) UpdatePropic(userID int, newPropic string) error {
+	_, err := db.c.Exec("UPDATE USERS SET propic = ? WHERE id = ?", newPropic, userID)
 	return err
 }
 

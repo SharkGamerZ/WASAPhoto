@@ -35,7 +35,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/SharkGamerZ/WASAPhoto/service/struct"
+	_struct "github.com/SharkGamerZ/WASAPhoto/service/struct"
 )
 
 // AppDatabase is the high level interface for the DB
@@ -51,6 +51,8 @@ type AppDatabase interface {
 	DeleteUser(userID int) error
 
 	UpdateUsername(userID int, username string) error
+	UpdateBio(userID int, newBio string) error
+	UpdatePropic(userID int, propic string) error
 
 	// Follows
 	FollowUser(follower int, followed int) error
@@ -92,14 +94,14 @@ func New(db *sql.DB) (AppDatabase, error) {
 		return nil, errors.New("database is required when building a AppDatabase")
 	}
 
-	// fmt.Println("Deleting database")
-	// DeleteDatabase(db)
+	fmt.Println("Deleting database")
+	DeleteDatabase(db)
 
 	// Creates the database structure if it doesn't exist
 	// USERS
 	createUsersTableQuery := `CREATE TABLE IF NOT EXISTS USERS (id INTEGER NOT NULL PRIMARY KEY,
-												username TEXT
-												bio TEXT
+												username TEXT,
+												bio TEXT DEFAULT '',
 												propic TEXT);`
 	_, err := db.Exec(createUsersTableQuery)
 	if err != nil {

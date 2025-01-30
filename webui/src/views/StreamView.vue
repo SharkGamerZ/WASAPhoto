@@ -15,6 +15,13 @@ export default {
 			try {
 				let response = await this.$axios.get(`/users/${userID}/stream`);
 				this.posts = response.data;
+
+				// Checks if the posts is equal to null
+				if (this.posts === null) {
+					this.posts = [];
+				}
+
+
 				// Fetch usernames for all posts
 				for (let post of this.posts) {
 					await this.getUsername(post.userID);

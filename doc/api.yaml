@@ -16,6 +16,7 @@
 # - [x] unlikePhoto
 # - [x] commentPhoto
 # - [x] uncommentPhoto
+# - [x] setMyBio
 #
 #
 #
@@ -791,4 +792,61 @@ paths:
                 type: string
                 description: Response string
                 example: The comment with id 299482 is not yours
+        "404": {$ref: "#/components/responses/NotFound"}
+
+  /users/{user_id}/bio:
+    parameters:
+        - {$ref: "#/components/parameters/user_id"}
+    put:
+      tags: ["user"]
+      operationId: setMyBio
+      summary: Change your own bio
+      description: |
+        If the user exists and is authenticated, it changes the bio of the specified User with the one in the body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/Bio"}
+      responses:
+        "200":
+          description: Bio changed. User's profile returned.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/User"}
+        "401":
+          description: Unauthorized. This is not your profile.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: This is not your profile
+        "404": {$ref: "#/components/responses/NotFound"}
+
+  /users/{user_id}/propic:
+    parameters:
+      - {$ref: "#/components/parameters/user_id"}
+    put:
+      tags: ["user"]
+      operationId: setMyPropic
+      summary: Change your own profile picture
+      description: |
+        If the user exists and is authenticated, it changes the profile picture of the specified User with the one in the body.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                propic:
+                  type: string
+                  format: binary
+                  description: Profile picture
+      responses:
+        "200":
+          description: Profile picture changed.
+        "401":
+          description: Unauthorized. This is not your profile.
         "404": {$ref: "#/components/responses/NotFound"}

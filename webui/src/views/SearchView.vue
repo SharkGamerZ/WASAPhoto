@@ -41,35 +41,64 @@ export default {
 </script>
 
 <template>
-	<div>
+	<div class="search-container">
 		<h1>Search Users</h1>
 		<LoadingSpinner v-if="loading" />
 		<ErrorMsg v-if="errormsg" :msg="errormsg" />
-		<div class="mb-3">
+		<div class="search-bar">
 			<label for="search" class="form-label">Search by Username</label>
 			<input type="text" class="form-control" id="search" v-model="searchQuery" @input="fetchUsers"
 				placeholder="Enter username" />
 		</div>
 
-		<ul class="list-group">
-			<li v-for="user in users" :key="user.userID" class="list-group-item d-flex align-items-center"
-				@click="$router.push(`/users/${user.userID}`)" style="cursor: pointer;">
-				<img :src="user.propic" alt="Profile Picture" class="img-thumbnail rounded-circle" width="50"
-					height="50" />
-				<h5 class="ms-3">{{ user.username }}</h5>
+		<ul class="user-list">
+			<li v-for="user in users" :key="user.user_id" class="user-item" @click="$router.push(`/users/${user.user_id}`)">
+				<img :src="'data:image/png;base64,' + user.propic" alt="Profile Picture" class="profile-pic" />
+				<h5 class="username">{{ user.username }}</h5>
 			</li>
 		</ul>
 	</div>
 </template>
 
 <style>
-/* Add any specific styles for the search view here */
-.list-group-item {
-	display: flex;
-	align-items: center;
+.search-container {
+	max-width: 600px;
+	margin: 0 auto;
+	padding: 20px;
 }
 
-.list-group-item img {
+.search-bar {
+	margin-bottom: 20px;
+}
+
+.user-list {
+	list-style: none;
+	padding: 0;
+}
+
+.user-item {
+	display: flex;
+	align-items: center;
+	padding: 10px;
+	border-bottom: 1px solid #eee;
+	cursor: pointer;
+	transition: background-color 0.3s;
+}
+
+.user-item:hover {
+	background-color: #f9f9f9;
+}
+
+.profile-pic {
+	width: 50px;
+	height: 50px;
+	border-radius: 50%;
+	object-fit: cover;
 	margin-right: 15px;
+}
+
+.username {
+	font-size: 1.1em;
+	color: #333;
 }
 </style>

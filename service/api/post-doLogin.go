@@ -26,6 +26,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	// Checks if the username is valid
 	if !isValidUsername(user.Username) {
 		http.Error(w, "Invalid username", http.StatusBadRequest)
+		rt.baseLogger.Errorf("Invalid username: %v", user.Username)
 		return
 	}
 
@@ -33,18 +34,19 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	userExists, err := rt.db.ExistsName(user.Username)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		rt.baseLogger.Errorf("Error checking if user exists: %v", err)
 		return
 	}
 
 	// If user does not exist, create a new user
 	if !userExists {
 		w.WriteHeader(http.StatusCreated)
-
 		// Create user
 		var id int
 		id, err = rt.db.CreateUser(user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			rt.baseLogger.Errorf("Error creating user: %v", err)
 			return
 		}
 
@@ -57,17 +59,21 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			rt.baseLogger.Errorf("Error encoding response: %v", err)
 			return
 		}
+
 	} else {
 		// If user exists, return OK
 		w.WriteHeader(http.StatusOK)
+
 		// Return the ID of the user
 		var id int
 		users, err := rt.db.GetUsersByUsername(user.Username, 0)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			rt.baseLogger.Errorf("Error getting user by username: %v", err)
 			return
 		}
 
@@ -81,6 +87,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			rt.baseLogger.Errorf("Error encoding response: %v", err)
 			return
 		}
 	}
