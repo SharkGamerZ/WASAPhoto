@@ -46,7 +46,7 @@ func (db *appdbimpl) UnbanUser(banner int, banned int) error {
 
 // GetBanneds returns all the users that are banned from the user
 func (db *appdbimpl) GetBanneds(userID int) ([]_struct.User, error) {
-	rows, err := db.c.Query("SELECT banned_id, username FROM BANS, USERS WHERE banner_id = ? AND banned_id = id", userID)
+	rows, err := db.c.Query("SELECT banned_id, username, propic FROM BANS, USERS WHERE banner_id = ? AND banned_id = id", userID)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (db *appdbimpl) GetBanneds(userID int) ([]_struct.User, error) {
 	var users []_struct.User
 	for rows.Next() {
 		var user _struct.User
-		err = rows.Scan(&user.UserID, &user.Username)
+		err = rows.Scan(&user.UserID, &user.Username, &user.Propic)
 		if err != nil {
 			return nil, err
 		}

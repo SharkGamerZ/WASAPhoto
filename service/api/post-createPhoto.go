@@ -68,7 +68,7 @@ func (rt *_router) createPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	photo.Timestamp = time.Now().Format("2006-01-02 15:04:05")
 
 	// Saves the photo in the database
-	err = rt.db.CreatePhoto(photo)
+	photoid, err := rt.db.CreatePhoto(photo)
 
 	// Checks if the photo was saved
 	if err != nil {
@@ -76,6 +76,7 @@ func (rt *_router) createPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	// Returns the photo
+	// Returns the photo id
 	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(strconv.Itoa(photoid)))
 }

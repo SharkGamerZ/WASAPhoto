@@ -95,8 +95,14 @@ export default {
 			/>
 		</div>
 
-		<div v-if="posts.length === 0" class="no-posts">
-			<p>No posts found</p>
+		<div v-if="posts.length === 0 && !loading" class="no-posts">
+			<svg class="feather empty-icon">
+				<use href="/feather-sprite-v4.29.0.svg#camera-off" />
+			</svg>
+			<h2 class="empty-title">Your feed is empty!</h2>
+			<p class="empty-text">
+				Follow your friends to see their photos here, or invite them to join WASAPhoto!
+			</p>
 		</div>
 	</div>
 </template>
@@ -118,5 +124,31 @@ export default {
 	text-align: center;
 	padding: 40px;
 	color: #666;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+}
+
+.empty-icon {
+	width: 48px;
+	height: 48px;
+	stroke: #999;
+	margin-bottom: 0.5rem;
+}
+
+.empty-title {
+	font-size: 1.5rem;
+	color: #333;
+	margin: 0;
+	font-weight: 600;
+}
+
+.empty-text {
+	font-size: 1rem;
+	color: #666;
+	margin: 0;
+	max-width: 300px;
+	line-height: 1.5;
 }
 </style>

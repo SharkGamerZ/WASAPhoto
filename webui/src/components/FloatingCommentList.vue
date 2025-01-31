@@ -88,6 +88,12 @@ export default {
 
     closeModal() {
       this.$emit('close');
+    },
+
+    handleKeydown(event) {
+      if (event.key === 'Escape' && this.show) {
+        this.closeModal();
+      }
     }
   },
   watch: {
@@ -99,6 +105,12 @@ export default {
         }
       }
     }
+  },
+  mounted() {
+    window.addEventListener('keydown', this.handleKeydown);
+  },
+  unmounted() {
+    window.removeEventListener('keydown', this.handleKeydown);
   }
 }
 </script>

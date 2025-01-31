@@ -8,19 +8,19 @@ import (
 )
 
 // CreatePhoto creates a new photo.
-func (db *appdbimpl) CreatePhoto(photo _struct.Photo) error {
+func (db *appdbimpl) CreatePhoto(photo _struct.Photo) (int, error) {
 	id, err := db.GetLastPhotoIDOfUser(photo.UserID)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return err
+		return 0, err
 	}
 	photo.PhotoID = id + 1
 
 	_, err = db.c.Exec("INSERT INTO photos (id, user_id, photo, caption, timestamp) VALUES (?, ?, ?, ?, ?)", photo.PhotoID, photo.UserID, photo.Photo, photo.Caption, photo.Timestamp)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return id, nil
 }
 
 // GetLastPhotoID returns the id of the last photo.
@@ -40,15 +40,12 @@ func (db *appdbimpl) GetLastPhotoIDOfUser(userid int) (int, error) {
 // GetUserPhotos returns the photos of a user.
 func (db *appdbimpl) GetUserPhotos(id int, viewerID int) ([]_struct.Photo, error) {
 	const query = `
-		SELECT p.id, p.user_id, p.photo, p.caption, p.timestamp,
-			   CASE WHEN l.user_id IS NOT NULL THEN 1 ELSE 0 END as liked
+		SELECT p.id, p.user_id, p.photo, p.caption, p.timestamp
 		FROM photos p
-		LEFT JOIN likes l ON p.id = l.photo_id AND l.user_id = ?
 		WHERE p.user_id = ?
-		ORDER BY p.timestamp DESC
-	`
+		ORDER BY p.timestamp DESC`
 
-	rows, err := db.c.Query(query, viewerID, id)
+	rows, err := db.c.Query(query, id)
 	if err != nil {
 		return nil, err
 	}
@@ -64,16 +61,23 @@ func (db *appdbimpl) GetUserPhotos(id int, viewerID int) ([]_struct.Photo, error
 			&photo.Photo,
 			&photo.Caption,
 			&photo.Timestamp,
-			&liked,
 		)
 		if err != nil {
 			return nil, err
 		}
 		photo.Liked = liked == 1
 
+		// Gets if the user has liked the photo
+		query := "SELECT EXISTS(SELECT 1 FROM likes WHERE photo_id = ? AND owner_id = ? AND user_id = ?)"
+		err = db.c.QueryRow(query, photo.PhotoID, photo.UserID, viewerID).Scan(&photo.Liked)
+		if err != nil {
+			return nil, err
+		}
+
 		// Count the likes of the photo
-		query := "SELECT COUNT(*) FROM likes WHERE photo_id = ?"
-		err = db.c.QueryRow(query, photo.PhotoID).Scan(&photo.Likes)
+		query = "SELECT COUNT(*) FROM likes WHERE photo_id = ? AND owner_id = ?"
+
+		err = db.c.QueryRow(query, photo.PhotoID, photo.UserID).Scan(&photo.Likes)
 		if err != nil {
 			return nil, err
 		}

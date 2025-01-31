@@ -15,13 +15,13 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 	w.Header().Set("Content-type", "application/json")
 
 	// Gets the id of the users
-	banned, err := strconv.Atoi(ps.ByName("id"))
+	banner, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	banner, err := strconv.Atoi(ps.ByName("id2"))
+	banned, err := strconv.Atoi(ps.ByName("id2"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -34,7 +34,7 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	// Unbans the user
-	err = rt.db.UnbanUser(banned, banner)
+	err = rt.db.UnbanUser(banner, banned)
 	// If the user wasn't banned
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "User is not banned", http.StatusNotFound)

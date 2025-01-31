@@ -15,12 +15,37 @@ export default {
 			searchResults: [],
 			showResults: false,
 			showCreatePhoto: false,
-			userProPic: null
+			userProPic: null,
+			isSearchFocused: false,
+			showLogged: false
 		}
 	},
 	computed: {
+		isLoginPage() {
+			return this.$route.path === '/session';
+		},
 		isLoggedIn() {
 			return localStorage.getItem('token') !== null;
+		}
+	},
+	watch: {
+		isLoggedIn: {
+			immediate: true,
+			handler(newValue) {
+				if (newValue) {
+					this.fetchUserProfile();
+				} else {
+					this.userProPic = null;
+				}
+			}
+		},
+		'$route': {
+			immediate: true,
+			handler(to) {
+				if (to.path !== '/session' && this.isLoggedIn && !this.userProPic) {
+					this.fetchUserProfile();
+				}
+			}
 		}
 	},
 	methods: {
@@ -35,6 +60,11 @@ export default {
 				const response = await this.$axios.get('/users', {
 					params: { username: this.searchQuery }
 				});
+				if (response.data === null) {
+					this.searchResults = [];
+					this.showResults = true;
+					return;
+				}
 				this.searchResults = response.data;
 				this.showResults = true;
 			} catch (e) {
@@ -57,26 +87,66 @@ export default {
 					const response = await this.$axios.get(`/users/${localStorage.getItem('token')}`);
 					this.userProPic = response.data.propic;
 				} catch (e) {
-					console.error('Error fetching user profile:', e);
+					if (e.response && (e.response.status === 404 || e.response.status === 401)) {
+						localStorage.removeItem('token');
+						this.$router.push('/session');
+					} else {
+						console.error('Error fetching user profile:', e);
+					}
 				}
 			}
 		},
 		navigateToProfile() {
 			this.$router.push(`/users/${localStorage.getItem('token')}`);
+		},
+		handleGlobalKeydown(event) {
+			if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+				return;
+			}
+
+			if (event.ctrlKey || event.altKey || event.metaKey) {
+				return;
+			}
+
+			if (event.key.length !== 1) {
+				return;
+			}
+
+			const searchInput = this.$refs.searchInput;
+			if (searchInput) {
+				searchInput.focus();
+				this.searchQuery = event.key;
+				event.preventDefault();
+			}
+		},
+		toggleLogged(show) {
+			this.showLogged = show;
+		},
+		async handleLogin() {
+			await this.fetchUserProfile();
+		},
+		handleLogout() {
+			this.userProPic = null;
+			this.showCreatePhoto = false;
+			this.$router.push('/session');
 		}
 	},
 	mounted() {
 		document.addEventListener('click', this.handleClickOutside);
-		this.fetchUserProfile();
+		window.addEventListener('keydown', this.handleGlobalKeydown);
+		if (this.isLoggedIn) {
+			this.fetchUserProfile();
+		}
 	},
 	beforeUnmount() {
 		document.removeEventListener('click', this.handleClickOutside);
+		window.removeEventListener('keydown', this.handleGlobalKeydown);
 	}
 }
 </script>
 
 <template>
-	<header class="app-header">
+	<header v-if="!isLoginPage" class="app-header">
 		<div class="header-content">
 			<RouterLink to="/" class="nav-link">
 				<svg class="feather">
@@ -91,28 +161,16 @@ export default {
 					<svg class="feather search-icon">
 						<use href="/feather-sprite-v4.29.0.svg#search" />
 					</svg>
-					<input 
-						type="text" 
-						v-model="searchQuery"
-						@input="searchUsers"
-						placeholder="Search users..."
-						class="search-input"
-					/>
+					<input ref="searchInput" type="text" v-model="searchQuery" @input="searchUsers"
+						placeholder="Search users..." class="search-input" />
 				</div>
 
 				<div v-if="showResults" class="search-results">
 					<div v-if="searchResults.length > 0">
-						<div 
-							v-for="user in searchResults" 
-							:key="user.user_id" 
-							class="search-result-item"
-							@click="navigateToUser(user.user_id)"
-						>
-							<img 
-								:src="user.propic ? 'data:image/png;base64,' + user.propic : '/default-avatar.png'" 
-								alt="Profile Picture" 
-								class="result-profile-pic" 
-							/>
+						<div v-for="user in searchResults" :key="user.user_id" class="search-result-item"
+							@click="navigateToUser(user.user_id)">
+							<img :src="'data:image/png;base64,' + user.propic" alt="Profile Picture"
+								class="result-profile-pic" />
 							<span class="result-username">@{{ user.username }}</span>
 						</div>
 					</div>
@@ -129,16 +187,13 @@ export default {
 		</div>
 	</header>
 
-	<main class="main-content">
-		<RouterView />
+	<main :class="['main-content', { 'login-page': isLoginPage }]">
+		<RouterView @login="handleLogin" @logout="handleLogout" />
 	</main>
 
-	<CreatePhoto 
-		:show="showCreatePhoto"
-		@close="showCreatePhoto = false"
-	/>
+	<CreatePhoto v-if="!isLoginPage" :show="showCreatePhoto" @close="showCreatePhoto = false" />
 
-	<footer v-if="isLoggedIn" class="app-footer">
+	<footer v-if="!isLoginPage" class="app-footer">
 		<button class="footer-button" @click="showCreatePhoto = true">
 			<svg class="feather">
 				<use href="/feather-sprite-v4.29.0.svg#plus-circle" />
@@ -146,11 +201,10 @@ export default {
 		</button>
 
 		<button class="footer-button profile-button" @click="navigateToProfile">
-			<img 
-				:src="userProPic ? 'data:image/png;base64,' + userProPic : '/default-avatar.png'" 
-				alt="Profile" 
-				class="profile-pic"
-			/>
+			<img v-if="userProPic" :src="'data:image/png;base64,' + userProPic" alt="Profile" class="profile-pic" />
+			<svg v-else class="feather">
+				<use href="/feather-sprite-v4.29.0.svg#user" />
+			</svg>
 		</button>
 	</footer>
 </template>
@@ -164,17 +218,17 @@ export default {
 	background: white;
 	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 	z-index: 1000;
-	height: 48px;
+	height: 60px;
 }
 
 .header-content {
 	display: flex;
 	align-items: center;
 	gap: 1rem;
-	padding: 0 1rem;
 	height: 100%;
 	max-width: 1200px;
 	margin: 0 auto;
+	padding: 0 1rem;
 }
 
 .app-title {
@@ -213,14 +267,15 @@ export default {
 	display: flex;
 	align-items: center;
 	background: #f5f5f5;
-	border-radius: 16px;
-	padding: 0.25rem 0.75rem;
-	height: 32px;
+	border-radius: 8px;
+	padding: 0.5rem 0.75rem;
+	height: 36px;
+	border: 1px solid #efefef;
 }
 
 .search-icon {
-	width: 14px;
-	height: 14px;
+	width: 16px;
+	height: 16px;
 	color: #666;
 	margin-right: 0.5rem;
 }
@@ -230,38 +285,50 @@ export default {
 	border: none;
 	background: none;
 	outline: none;
-	font-size: 0.85rem;
+	font-size: 0.9rem;
 	color: #333;
 	padding: 0;
 }
 
 .search-results {
 	position: absolute;
-	top: calc(100% + 4px);
+	top: 64%;
 	left: 0;
 	right: 0;
 	background: white;
-	border-radius: 8px;
+	border-radius: 0 0 8px 8px;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-	max-height: 300px;
+	max-height: 400px;
 	overflow-y: auto;
+	border: 1px solid #efefef;
+	border-top: none;
+	margin-top: -1px;
+}
+
+.search-result-item:first-child {
+	border-top: 1px solid #efefef;
 }
 
 .search-result-item {
 	display: flex;
 	align-items: center;
-	padding: 0.5rem 0.75rem;
+	padding: 0.75rem;
 	cursor: pointer;
 	transition: background-color 0.2s;
+	border-bottom: 1px solid #efefef;
+}
+
+.search-result-item:last-child {
+	border-bottom: none;
 }
 
 .search-result-item:hover {
-	background-color: #f5f5f5;
+	background-color: #f8f8f8;
 }
 
 .result-profile-pic {
-	width: 28px;
-	height: 28px;
+	width: 32px;
+	height: 32px;
 	border-radius: 50%;
 	object-fit: cover;
 	margin-right: 0.75rem;
@@ -269,13 +336,19 @@ export default {
 
 .result-username {
 	color: #333;
-	font-size: 0.85rem;
+	font-size: 0.9rem;
+	font-weight: 500;
 }
 
 .main-content {
-	margin-top: 48px;
+	margin-top: 60px;
 	margin-bottom: 60px;
 	padding: 1rem;
+}
+
+.main-content.login-page {
+	margin: 0;
+	padding: 0;
 }
 
 .feather {
@@ -285,24 +358,24 @@ export default {
 }
 
 .no-results {
-	padding: 1rem;
+	padding: 1.5rem;
 	text-align: center;
 }
 
 .no-results-icon {
-	margin-bottom: 0.5rem;
+	margin-bottom: 0.75rem;
 }
 
 .no-results-icon .feather {
 	width: 24px;
 	height: 24px;
-	stroke: #dc3545;
+	stroke: #999;
 	opacity: 0.8;
 }
 
 .no-results-text {
 	color: #666;
-	font-size: 0.85rem;
+	font-size: 0.9rem;
 	margin: 0;
 }
 
@@ -318,18 +391,22 @@ export default {
 	justify-content: space-between;
 	align-items: center;
 	z-index: 1000;
+	height: 60px;
 }
 
 .footer-button {
 	background: none;
 	border: none;
 	cursor: pointer;
-	padding: 0.25rem;
+	padding: 0;
 	border-radius: 50%;
 	transition: background-color 0.2s;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	width: 40px;
+	height: 40px;
+	aspect-ratio: 1;
 }
 
 .footer-button:hover {
@@ -337,14 +414,23 @@ export default {
 }
 
 .footer-button .feather {
-	width: 20px;
-	height: 20px;
+	width: 24px;
+	height: 24px;
 	stroke: #333;
 }
 
+.profile-button {
+	width: 40px;
+	height: 40px;
+	padding: 4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
 .profile-button .profile-pic {
-	width: 28px;
-	height: 28px;
+	width: 32px;
+	height: 32px;
 	border-radius: 50%;
 	object-fit: cover;
 }

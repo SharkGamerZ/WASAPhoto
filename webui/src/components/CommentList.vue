@@ -24,6 +24,15 @@ export default {
 		comments: {
 			type: Array,
 			default: () => []
+		},
+		post: {
+			type: Object,
+			required: false,
+			default: null
+		},
+		isOwner: {
+			type: Boolean,
+			default: false
 		}
 	},
 	data() {
@@ -32,10 +41,11 @@ export default {
 			newComment: '',
 			loading: false,
 			error: null,
-			localComments: [] // Add this to store comments locally
+			localComments: [], // Add this to store comments locally
+			showMenu: false
 		}
 	},
-	emits: ['close', 'comment-added'],
+	emits: ['close', 'comment-added', 'like', 'delete'],
 	methods: {
 		async fetchComments() {
 			this.loading = true;
@@ -127,6 +137,30 @@ export default {
 
 		closeModal() {
 			this.$emit('close');
+		},
+
+		toggleMenu() {
+			this.showMenu = !this.showMenu;
+		},
+
+		handleDelete() {
+			if (confirm('Are you sure you want to delete this photo?')) {
+				this.$emit('delete');
+			}
+			this.showMenu = false;
+		},
+
+		async deleteComment(commentId) {
+			try {
+				await this.$axios.delete(`/users/${this.userId}/photos/${this.photoId}/comments/${commentId}`);
+				this.localComments = this.localComments.filter(comment => comment.id !== commentId);
+			} catch (e) {
+				console.error('Error deleting comment:', e);
+			}
+		},
+
+		isCommentOwner(comment) {
+			return parseInt(localStorage.getItem('token')) === comment.user_id;
 		}
 	},
 	watch: {
@@ -162,6 +196,24 @@ export default {
 <template>
 	<div v-if="show" :class="{ 'modal-overlay': !floating }" @click.self="closeModal">
 		<div :class="['comments-wrapper', { 'modal-content': !floating }]">
+			<div class="comments-header">
+				<div v-if="isOwner" class="menu-container">
+					<button class="menu-button" @click.stop="toggleMenu">
+						<svg class="feather">
+							<use href="/feather-sprite-v4.29.0.svg#more-horizontal" />
+						</svg>
+					</button>
+					<div v-if="showMenu" class="menu-dropdown">
+						<button class="delete-button" @click="handleDelete">
+							<svg class="feather">
+								<use href="/feather-sprite-v4.29.0.svg#trash-2" />
+							</svg>
+							Delete Photo
+						</button>
+					</div>
+				</div>
+			</div>
+
 			<!-- Show header only in modal mode -->
 			<div v-if="!floating" class="modal-header">
 				<h2>Comments</h2>
@@ -194,21 +246,49 @@ export default {
 									class="comment-avatar" alt="Profile Picture" />
 								<strong>@{{ users[comment.user_id]?.username || 'Loading...' }}</strong>
 							</div>
-							<span class="timestamp">{{ new Date(comment.timestamp).toLocaleString() }}</span>
+							<div class="comment-actions">
+								<span class="timestamp">{{ new Date(comment.timestamp).toLocaleString() }}</span>
+								<div v-if="isCommentOwner(comment)" class="comment-menu">
+									<button class="menu-button" @click.stop="comment.showMenu = !comment.showMenu">
+										<svg class="feather">
+											<use href="/feather-sprite-v4.29.0.svg#more-horizontal" />
+										</svg>
+									</button>
+									<div v-if="comment.showMenu" class="menu-dropdown">
+										<button class="delete-button" @click="deleteComment(comment.id)">
+											<svg class="feather">
+												<use href="/feather-sprite-v4.29.0.svg#trash-2" />
+											</svg>
+											Delete Comment
+										</button>
+									</div>
+								</div>
+							</div>
 						</div>
 						<p class="comment-text">{{ comment.content }}</p>
 					</div>
 				</div>
 			</div>
 
-			<!-- Only show input when not hidden -->
-			<div v-if="!hideInput" class="comment-input">
-				<input type="text" v-model="newComment" placeholder="Write a comment..." @keyup.enter="addComment" />
-				<button @click="addComment" :disabled="!newComment.trim()">
-					<svg class="feather">
-						<use href="/feather-sprite-v4.29.0.svg#send" />
-					</svg>
-				</button>
+			<!-- Combined actions and input bar -->
+			<div class="bottom-bar">
+				<div v-if="post" class="actions-section">
+					<button class="action-button" @click="$emit('like', post)">
+						<svg class="feather" :class="{ 'liked': post.liked }">
+							<use href="/feather-sprite-v4.29.0.svg#heart" />
+						</svg>
+						<span class="likes-count">{{ post.likes || 0 }} likes</span>
+					</button>
+				</div>
+
+				<div v-if="!hideInput" class="comment-input">
+					<input type="text" v-model="newComment" placeholder="Write a comment..." @keyup.enter="addComment" />
+					<button @click="addComment" :disabled="!newComment.trim()">
+						<svg class="feather">
+							<use href="/feather-sprite-v4.29.0.svg#send" />
+						</svg>
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -233,6 +313,11 @@ export default {
 	flex-direction: column;
 	background: white;
 	border-radius: 8px;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
 }
 
 .modal-content {
@@ -260,10 +345,7 @@ export default {
 .comments-container {
 	flex: 1;
 	overflow-y: auto;
-	padding: 16px 16px 0 16px;
-	min-height: 100px;
-	max-height: 400px;
-	scroll-behavior: smooth;
+	padding: 16px 16px 80px 16px;
 	display: flex;
 	flex-direction: column;
 }
@@ -272,9 +354,7 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
-	padding-bottom: 16px;
-	min-height: min-content;
-	margin-top: auto; /* Push content to the bottom */
+	margin-top: auto;
 }
 
 .comment {
@@ -315,18 +395,59 @@ export default {
 	line-height: 1.4;
 }
 
-.comment-input {
-	position: sticky;
+.bottom-bar {
+	position: absolute;
 	bottom: 0;
-	border-top: 1px solid #eee;
-	padding: 16px;
+	left: 0;
+	right: 0;
 	display: flex;
-	gap: 8px;
+	align-items: center;
+	gap: 16px;
+	padding: 12px 16px;
 	background: white;
+	border-top: 1px solid #dbdbdb;
 	border-radius: 0 0 8px 8px;
-	z-index: 1;
+	z-index: 2;
 }
 
+.actions-section {
+	display: flex;
+	align-items: center;
+}
+
+.action-button {
+	background: none;
+	border: none;
+	padding: 8px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.action-button .feather {
+	width: 24px;
+	height: 24px;
+	stroke: currentColor;
+}
+
+.action-button .feather.liked {
+	fill: #ed4956;
+	stroke: #ed4956;
+}
+
+.likes-count {
+	font-size: 0.9rem;
+	color: #262626;
+}
+
+.comment-input {
+	flex: 1;
+	display: flex;
+	gap: 8px;
+}
+
+/* Update existing comment-input styles */
 .comment-input input {
 	flex: 1;
 	border: 1px solid #ddd;
@@ -346,11 +467,17 @@ export default {
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
+	transition: background-color 0.2s;
 }
 
 .comment-input button:disabled {
 	background: #ccc;
 	cursor: not-allowed;
+	opacity: 0.7;
+}
+
+.comment-input button:hover:not(:disabled) {
+	background: #0056b3;
 }
 
 .feather {
@@ -412,5 +539,136 @@ export default {
 
 .comments-container::-webkit-scrollbar-thumb:hover {
 	background: #555;
+}
+
+.comments-header {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	z-index: 3;
+}
+
+.menu-container {
+	position: relative;
+}
+
+.menu-button {
+	background: none;
+	border: none;
+	padding: 8px;
+	cursor: pointer;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.menu-button:hover {
+	background-color: rgba(0, 0, 0, 0.05);
+}
+
+.menu-dropdown {
+	position: absolute;
+	top: 100%;
+	right: 0;
+	background: white;
+	border-radius: 8px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+	padding: 8px;
+	min-width: 150px;
+}
+
+.delete-button {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 8px 12px;
+	border: none;
+	background: none;
+	color: #dc3545;
+	cursor: pointer;
+	border-radius: 4px;
+}
+
+.delete-button:hover {
+	background-color: #dc354510;
+}
+
+.delete-button .feather {
+	width: 16px;
+	height: 16px;
+}
+
+.comment-actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.comment-menu {
+	position: relative;
+}
+
+.comment-menu .menu-button {
+	background: none;
+	border: none;
+	padding: 4px;
+	cursor: pointer;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	opacity: 0;
+	transition: opacity 0.2s, background-color 0.2s;
+}
+
+.comment:hover .menu-button {
+	opacity: 1;
+}
+
+.comment-menu .menu-button:hover {
+	background-color: rgba(0, 0, 0, 0.05);
+}
+
+.comment-menu .menu-button .feather {
+	width: 16px;
+	height: 16px;
+	stroke: #666;
+}
+
+.comment-menu .menu-dropdown {
+	position: absolute;
+	top: 100%;
+	right: 0;
+	background: white;
+	border-radius: 8px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+	padding: 8px;
+	min-width: 150px;
+	z-index: 1000;
+}
+
+.comment-menu .delete-button {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 8px 12px;
+	border: none;
+	background: none;
+	color: #dc3545;
+	cursor: pointer;
+	border-radius: 4px;
+	font-size: 0.9rem;
+}
+
+.comment-menu .delete-button:hover {
+	background-color: #dc354510;
+}
+
+.comment-menu .delete-button .feather {
+	width: 14px;
+	height: 14px;
 }
 </style>

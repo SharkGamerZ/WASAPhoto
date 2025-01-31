@@ -67,7 +67,7 @@ type AppDatabase interface {
 	IsBanned(banner int, banned int) (bool, error)
 
 	// Photos
-	CreatePhoto(photo _struct.Photo) error
+	CreatePhoto(photo _struct.Photo) (int, error)
 	GetUserPhotos(userID int, viewerID int) ([]_struct.Photo, error)
 	GetPhotoById(userID int, photoID int, viewerID int) (_struct.Photo, error)
 	DeletePhoto(userID int, photoID int) error

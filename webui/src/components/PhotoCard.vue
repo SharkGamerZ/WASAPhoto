@@ -62,8 +62,7 @@ export default {
 <template>
 	<div class="photo-card">
 		<div class="photo-header" @click="navigateToUser">
-			<img :src="userProPic ? 'data:image/png;base64,' + userProPic : '/default-avatar.png'" alt="Profile Picture"
-				class="user-avatar" />
+			<img :src="'data:image/png;base64,' + userProPic" class="user-avatar" />
 			<span class="username">@{{ username }}</span>
 		</div>
 
@@ -96,12 +95,8 @@ export default {
 			<span class="timestamp">{{ post.timestamp }}</span>
 		</div>
 
-		<FloatingCommentList 
-			:show="showComments" 
-			:photo-id="post.photoID" 
-			:user-id="userId"
-			@close="showComments = false" 
-		/>
+		<FloatingCommentList :show="showComments" :photo-id="post.photoID" :user-id="userId"
+			@close="showComments = false" />
 
 		<Profiles :users="likesList" title="Likes" :show="showLikes" @close="showLikes = false" />
 	</div>

@@ -50,7 +50,7 @@ func (db *appdbimpl) GetLikes(ownerID, photoID int) ([]_struct.User, error) {
 	rows, err := db.c.Query(`SELECT user_id, propic, username
 							FROM LIKES, USERS
 							WHERE owner_id = ? AND photo_id = ?
-							AND LIKES.owner_id = USERS.id`, ownerID, photoID)
+							AND LIKES.user_id = USERS.id`, ownerID, photoID)
 	if err != nil {
 		return nil, err
 	}
@@ -65,6 +65,7 @@ func (db *appdbimpl) GetLikes(ownerID, photoID int) ([]_struct.User, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		users = append(users, user)
 	}
 
