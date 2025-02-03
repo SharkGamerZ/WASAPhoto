@@ -42,6 +42,13 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
+	// Makes the user unfollow the banned user
+	err = rt.db.UnfollowUser(banner, banned)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	// Bans the user
 	err = rt.db.BanUser(banner, banned)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -52,4 +59,5 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 }

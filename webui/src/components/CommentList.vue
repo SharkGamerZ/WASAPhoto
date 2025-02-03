@@ -1,5 +1,10 @@
 <script>
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
+
 export default {
+	components: {
+		DeleteConfirmationModal
+	},
 	props: {
 		show: {
 			type: Boolean,
@@ -42,7 +47,9 @@ export default {
 			loading: false,
 			error: null,
 			localComments: [], // Add this to store comments locally
-			showMenu: false
+			showMenu: false,
+			showDeleteConfirm: false,
+			commentToDelete: null
 		}
 	},
 	emits: ['close', 'comment-added', 'like', 'delete'],
@@ -100,25 +107,25 @@ export default {
 					`/users/${this.userId}/photos/${this.photoId}/comments`,
 					JSON.stringify(this.newComment.trim())
 				);
-				
+
 				const newComment = {
 					id: response.data.id,
 					user_id: localStorage.getItem('token'),
 					content: this.newComment.trim(),
 					timestamp: new Date().toISOString()
 				};
-				
+
 				// Add to local comments
 				this.localComments.push(newComment);
-				
+
 				// Emit the new comment to parent
 				this.$emit('comment-added', newComment);
-				
+
 				this.newComment = '';
-				
+
 				// Get user data for the new comment if needed
 				await this.getUser(newComment.user_id);
-				
+
 				// Scroll to bottom after adding comment
 				await this.$nextTick();
 				this.scrollToBottom();
@@ -150,12 +157,25 @@ export default {
 			this.showMenu = false;
 		},
 
-		async deleteComment(commentId) {
+		async deleteComment() {
+			if (!this.commentToDelete) return;
+
 			try {
-				await this.$axios.delete(`/users/${this.userId}/photos/${this.photoId}/comments/${commentId}`);
-				this.localComments = this.localComments.filter(comment => comment.id !== commentId);
+				await this.$axios.delete(`/users/${this.userId}/photos/${this.photoId}/comments/${this.commentToDelete}`);
+				this.localComments = this.localComments.filter(comment => comment.id !== this.commentToDelete);
+				this.commentToDelete = null;
 			} catch (e) {
 				console.error('Error deleting comment:', e);
+			}
+		},
+
+		confirmDeleteComment(commentId) {
+			this.commentToDelete = commentId;
+			this.showDeleteConfirm = true;
+		},
+		handleClickOutside(event) {
+			if (this.$refs.menu && !this.$refs.menu.contains(event.target)) {
+				this.showMenu = false;
 			}
 		},
 
@@ -189,7 +209,11 @@ export default {
 		this.$nextTick(() => {
 			this.scrollToBottom();
 		});
-	}
+		document.addEventListener('click', this.handleClickOutside);
+	},
+	beforeDestroy() {
+		document.removeEventListener('click', this.handleClickOutside);
+	},
 }
 </script>
 
@@ -198,7 +222,7 @@ export default {
 		<div :class="['comments-wrapper', { 'modal-content': !floating }]">
 			<div class="comments-header">
 				<div v-if="isOwner" class="menu-container">
-					<button class="menu-button" @click.stop="toggleMenu">
+					<button class="menu-button" @click.stop="comment.showMenu = !comment.showMenu" ref="menu">
 						<svg class="feather">
 							<use href="/feather-sprite-v4.29.0.svg#more-horizontal" />
 						</svg>
@@ -212,16 +236,6 @@ export default {
 						</button>
 					</div>
 				</div>
-			</div>
-
-			<!-- Show header only in modal mode -->
-			<div v-if="!floating" class="modal-header">
-				<h2>Comments</h2>
-				<button class="close-button" @click="closeModal">
-					<svg class="feather">
-						<use href="/feather-sprite-v4.29.0.svg#x" />
-					</svg>
-				</button>
 			</div>
 
 			<div ref="commentsContainer" class="comments-container">
@@ -247,7 +261,8 @@ export default {
 								<strong>@{{ users[comment.user_id]?.username || 'Loading...' }}</strong>
 							</div>
 							<div class="comment-actions">
-								<span class="timestamp">{{ new Date(comment.timestamp).toLocaleString() }}</span>
+								<span :class="isCommentOwner(comment) ? 'timestamp own' : 'timestamp'">{{ new
+									Date(comment.timestamp).toLocaleString() }}</span>
 								<div v-if="isCommentOwner(comment)" class="comment-menu">
 									<button class="menu-button" @click.stop="comment.showMenu = !comment.showMenu">
 										<svg class="feather">
@@ -255,7 +270,7 @@ export default {
 										</svg>
 									</button>
 									<div v-if="comment.showMenu" class="menu-dropdown">
-										<button class="delete-button" @click="deleteComment(comment.id)">
+										<button class="delete-button" @click="confirmDeleteComment(comment.id)">
 											<svg class="feather">
 												<use href="/feather-sprite-v4.29.0.svg#trash-2" />
 											</svg>
@@ -282,7 +297,8 @@ export default {
 				</div>
 
 				<div v-if="!hideInput" class="comment-input">
-					<input type="text" v-model="newComment" placeholder="Write a comment..." @keyup.enter="addComment" />
+					<input type="text" v-model="newComment" placeholder="Write a comment..."
+						@keyup.enter="addComment" />
 					<button @click="addComment" :disabled="!newComment.trim()">
 						<svg class="feather">
 							<use href="/feather-sprite-v4.29.0.svg#send" />
@@ -290,6 +306,8 @@ export default {
 					</button>
 				</div>
 			</div>
+			<DeleteConfirmationModal v-if="showDeleteConfirm" @confirm="deleteComment"
+				@close="showDeleteConfirm = false" />
 		</div>
 	</div>
 </template>
@@ -332,8 +350,10 @@ export default {
 /* Different styles for floating mode */
 .floating .comments-container {
 	height: 100%;
-	max-height: none; /* Remove max-height constraint */
-	overflow: hidden; /* Remove scrollbar from container when floating */
+	max-height: none;
+	/* Remove max-height constraint */
+	overflow: hidden;
+	/* Remove scrollbar from container when floating */
 }
 
 /* Regular modal styles */
@@ -368,6 +388,13 @@ export default {
 	justify-content: space-between;
 	align-items: center;
 	margin-bottom: 8px;
+	position: relative;
+}
+
+.comment-menu {
+	position: absolute;
+	top: 0;
+	right: 0;
 }
 
 .user-info {
@@ -386,6 +413,7 @@ export default {
 .timestamp {
 	font-size: 0.8rem;
 	color: #666;
+	transition: transform 0.2s ease;
 }
 
 .comment-text {
@@ -549,13 +577,13 @@ export default {
 }
 
 .menu-container {
-	position: relative;
+	position: absolute;
+	top: 0;
 }
 
 .menu-button {
 	background: none;
 	border: none;
-	padding: 8px;
 	cursor: pointer;
 	border-radius: 50%;
 	display: flex;
@@ -602,8 +630,7 @@ export default {
 
 .comment-actions {
 	display: flex;
-	align-items: center;
-	gap: 12px;
+	gap: 8px;
 }
 
 .comment-menu {
@@ -617,14 +644,20 @@ export default {
 	cursor: pointer;
 	border-radius: 50%;
 	display: flex;
-	align-items: center;
-	justify-content: center;
 	opacity: 0;
-	transition: opacity 0.2s, background-color 0.2s;
+	transition: opacity 0.2s, background-color 0.2s, transform 0.2s ease;
+	position: absolute;
+	right: 0;
+	top: 0;
 }
 
 .comment:hover .menu-button {
 	opacity: 1;
+}
+
+.comment:hover .timestamp.own {
+	transform: translateX(-20px);
+
 }
 
 .comment-menu .menu-button:hover {

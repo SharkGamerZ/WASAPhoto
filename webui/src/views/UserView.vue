@@ -3,13 +3,15 @@ import Profiles from '@/components/Profiles.vue'
 import FloatingPhotoCard from '@/components/FloatingPhotoCard.vue'
 import CommentList from '@/components/CommentList.vue'
 import FloatingBans from '@/components/FloatingBans.vue'
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
 
 export default {
 	components: {
 		Profiles,
 		FloatingPhotoCard,
 		CommentList,
-		FloatingBans
+		FloatingBans,
+		DeleteConfirmationModal,
 	},
 	data() {
 		return {
@@ -39,7 +41,8 @@ export default {
 			notificationTimeout: null,
 			showBans: false,
 			bannedUsers: [],
-			showOthersMenu: false
+			showOthersMenu: false,
+			showBanConfirm: false
 		};
 	},
 	computed: {
@@ -389,6 +392,26 @@ export default {
 		},
 		toggleOthersMenu() {
 			this.showOthersMenu = !this.showOthersMenu;
+		},
+		confirmBanUser() {
+			this.showBanConfirm = true;
+		},
+		cancelBanUser() {
+			this.showBanConfirm = false;
+		},
+		async banUser() {
+			try {
+				const token = localStorage.getItem('token');
+				await this.$axios.put(`/users/${token}/banned/${this.user.user_id}`);
+				this.showOthersMenu = false;
+				this.showNotification('User banned successfully');
+				this.$router.push('/');
+			} catch (e) {
+				console.error('Error banning user:', e);
+				this.showNotification('Failed to ban user', 'error');
+			} finally {
+				this.showBanConfirm = false;
+			}
 		}
 	},
 	mounted() {
@@ -477,7 +500,7 @@ export default {
 									<div v-if="showMenu" class="menu-dropdown">
 										<button class="menu-item" @click="fetchBannedUsers">
 											<svg class="feather">
-												<use href="/feather-sprite-v4.29.0.svg#users-x" />
+												<use href="/feather-sprite-v4.29.0.svg#user-x" />
 											</svg>
 											Banned Users
 										</button>
@@ -498,7 +521,7 @@ export default {
 										</svg>
 									</button>
 									<div v-if="showOthersMenu" class="menu-dropdown">
-										<button class="menu-item warning" @click="banUser">
+										<button class="menu-item warning" @click="confirmBanUser">
 											<svg class="feather">
 												<use href="/feather-sprite-v4.29.0.svg#user-x" />
 											</svg>
@@ -566,17 +589,23 @@ export default {
 			</div>
 		</div>
 
-		<Profiles :users="followersList || []" title="Followers" :show="showFollowers" @close="closeFollowers" />
-
-		<Profiles :users="followingList || []" title="Following" :show="showFollowing" @close="closeFollowing" />
-
 		<!-- Photo Modal -->
 		<div v-if="selectedPhotoIndex !== null" class="photo-modal" @click.self="closePhotoModal">
 			<FloatingPhotoCard :post="photos[selectedPhotoIndex]" :username="username" :user-pro-pic="user.propic"
 				:user-id="user.user_id" @like="handleLike" @navigate="navigatePhoto" />
 		</div>
 
+		<!-- Floating Components -->
+		<Profiles :users="followersList || []" title="Followers" :show="showFollowers" @close="closeFollowers" />
+
+		<Profiles :users="followingList || []" title="Following" :show="showFollowing" @close="closeFollowing" />
+
+
 		<FloatingBans :users="bannedUsers" :show="showBans" @close="closeBans" @unban="handleUnban" />
+
+		<DeleteConfirmationModal v-if="showBanConfirm" :show="showBanConfirm" @confirm="banUser" @close="cancelBanUser"
+			title="Ban User" message="Are you sure you want to ban this user? This action cannot be undone."
+			acceptText="Ban" />
 
 		<div v-if="notification" class="notification" :class="notification.type">
 			{{ notification.message }}
