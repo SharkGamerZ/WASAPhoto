@@ -1,9 +1,7 @@
-<script setup>
+<script>
 import { RouterLink, RouterView } from 'vue-router'
 import CreatePhoto from '@/components/CreatePhoto.vue'
-</script>
 
-<script>
 export default {
 	name: 'App',
 	components: {
@@ -18,7 +16,7 @@ export default {
 			userProPic: null,
 			isSearchFocused: false,
 			showLogged: false
-		}
+		};
 	},
 	computed: {
 		isLoginPage() {
@@ -99,26 +97,6 @@ export default {
 		navigateToProfile() {
 			this.$router.push(`/users/${localStorage.getItem('token')}`);
 		},
-		handleGlobalKeydown(event) {
-			if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
-				return;
-			}
-
-			if (event.ctrlKey || event.altKey || event.metaKey) {
-				return;
-			}
-
-			if (event.key.length !== 1) {
-				return;
-			}
-
-			const searchInput = this.$refs.searchInput;
-			if (searchInput) {
-				searchInput.focus();
-				this.searchQuery = event.key;
-				event.preventDefault();
-			}
-		},
 		toggleLogged(show) {
 			this.showLogged = show;
 		},
@@ -133,14 +111,9 @@ export default {
 	},
 	mounted() {
 		document.addEventListener('click', this.handleClickOutside);
-		window.addEventListener('keydown', this.handleGlobalKeydown);
-		if (this.isLoggedIn) {
-			this.fetchUserProfile();
-		}
 	},
 	beforeUnmount() {
 		document.removeEventListener('click', this.handleClickOutside);
-		window.removeEventListener('keydown', this.handleGlobalKeydown);
 	}
 }
 </script>
@@ -161,8 +134,8 @@ export default {
 					<svg class="feather search-icon">
 						<use href="/feather-sprite-v4.29.0.svg#search" />
 					</svg>
-					<input ref="searchInput" type="text" v-model="searchQuery" @input="searchUsers"
-						placeholder="Search users..." class="search-input" />
+					<input type="text" v-model="searchQuery" @input="searchUsers" placeholder="Search users..."
+						class="search-input" />
 				</div>
 
 				<div v-if="showResults" class="search-results">
@@ -292,7 +265,7 @@ export default {
 
 .search-results {
 	position: absolute;
-	top: 64%;
+	top: 85%;
 	left: 0;
 	right: 0;
 	background: white;
