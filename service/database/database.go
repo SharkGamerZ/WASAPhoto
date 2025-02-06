@@ -95,8 +95,8 @@ func New(db *sql.DB) (AppDatabase, error) {
 		return nil, errors.New("database is required when building a AppDatabase")
 	}
 
-	fmt.Println("Deleting database")
-	DeleteDatabase(db)
+	// fmt.Println("Deleting database")
+	// DeleteDatabase(db)
 
 	// Creates the database structure if it doesn't exist
 	// USERS

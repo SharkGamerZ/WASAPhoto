@@ -2,14 +2,12 @@
 import PhotoCard from '@/components/PhotoCard.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import ErrorMsg from '@/components/ErrorMsg.vue'
-import FloatingCommentList from '@/components/FloatingCommentList.vue'
 
 export default {
 	components: {
 		PhotoCard,
 		LoadingSpinner,
 		ErrorMsg,
-		FloatingCommentList
 	},
 	data: function () {
 		return {
@@ -84,15 +82,9 @@ export default {
 		<ErrorMsg v-if="errormsg" :msg="errormsg" />
 
 		<div class="photo-feed">
-			<PhotoCard 
-				v-for="post in posts" 
-				:key="post.photoID"
-				:post="post"
-				:username="users[post.userID]?.username || 'Loading...'"
-				:userProPic="users[post.userID]?.propic"
-				:userId="post.userID"
-				@like="toggleLike"
-			/>
+			<PhotoCard v-for="post in posts" :key="post.photoID" :post="post"
+				:username="users[post.userID]?.username || 'Loading...'" :userProPic="users[post.userID]?.propic"
+				:userId="post.userID" @like="toggleLike" />
 		</div>
 
 		<div v-if="posts.length === 0 && !loading" class="no-posts">

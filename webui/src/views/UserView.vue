@@ -1,7 +1,6 @@
 <script>
 import Profiles from '@/components/Profiles.vue'
 import FloatingPhotoCard from '@/components/FloatingPhotoCard.vue'
-import CommentList from '@/components/CommentList.vue'
 import FloatingBans from '@/components/FloatingBans.vue'
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
 
@@ -9,7 +8,6 @@ export default {
 	components: {
 		Profiles,
 		FloatingPhotoCard,
-		CommentList,
 		FloatingBans,
 		DeleteConfirmationModal,
 	},
@@ -222,6 +220,12 @@ export default {
 				timestamp: comment.timestamp
 			});
 		},
+		handlePhotoDeleted(photoID) {
+			// Remove the deleted photo from the photos array
+			this.photos = this.photos.filter(photo => photo.photoID !== photoID);
+			// Close the photo modal
+			this.closePhotoModal();
+		},
 		handleKeydown(event) {
 			if (this.selectedPhotoIndex === null) return;
 
@@ -378,17 +382,6 @@ export default {
 		closeBans() {
 			this.showBans = false;
 			document.body.classList.remove('modal-open');
-		},
-		async banUser() {
-			try {
-				const token = localStorage.getItem('token');
-				await this.$axios.put(`/users/${token}/banned/${this.user.user_id}`);
-				this.showMenu = false;
-				this.showNotification('User banned successfully');
-			} catch (e) {
-				console.error('Error banning user:', e);
-				this.showNotification('Failed to ban user', 'error');
-			}
 		},
 		toggleOthersMenu() {
 			this.showOthersMenu = !this.showOthersMenu;
@@ -592,7 +585,8 @@ export default {
 		<!-- Photo Modal -->
 		<div v-if="selectedPhotoIndex !== null" class="photo-modal" @click.self="closePhotoModal">
 			<FloatingPhotoCard :post="photos[selectedPhotoIndex]" :username="username" :user-pro-pic="user.propic"
-				:user-id="user.user_id" @like="handleLike" @navigate="navigatePhoto" />
+				:user-id="user.user_id" @like="handleLike" @navigate="navigatePhoto"
+				@photo-deleted="handlePhotoDeleted" />
 		</div>
 
 		<!-- Floating Components -->

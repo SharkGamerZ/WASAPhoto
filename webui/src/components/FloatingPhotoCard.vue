@@ -80,6 +80,8 @@ export default {
 				await this.deletePhoto();
 				this.$emit('photo-deleted', this.post.photoID);
 			}, 300); // Match animation duration
+
+			this.isDeleting = false;
 		},
 		async deletePhoto() {
 			try {

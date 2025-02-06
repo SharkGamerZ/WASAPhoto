@@ -257,7 +257,9 @@ paths:
                   identifier:
                     type: string
                     description: identifier of a user
-                    example: "abcdef012345"
+                    minLength: 1
+                    maxLength: 9999
+                    example: "1986290"
         '201':
           description: User created and log-in action successful
           content:
@@ -269,7 +271,7 @@ paths:
                   identifier:
                     type: string
                     description: identifier of a user
-                    example: "abcdef012345"
+                    example: "1986290"
 
   /users:
     parameters:
@@ -839,6 +841,7 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              description: Profile picture to change
               properties:
                 propic:
                   type: string

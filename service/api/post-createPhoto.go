@@ -64,7 +64,6 @@ func (rt *_router) createPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	photo.UserID = url_id
 	photo.Photo = base64.StdEncoding.EncodeToString(fileBytes)
 	photo.Caption = caption
-	// photo.Timestamp = time.Now().Format("2025-01-01 00:00:00")
 	photo.Timestamp = time.Now().Format("2006-01-02 15:04:05")
 
 	// Saves the photo in the database
@@ -78,5 +77,9 @@ func (rt *_router) createPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	// Returns the photo id
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(strconv.Itoa(photoid)))
+	_, err = w.Write([]byte(strconv.Itoa(photoid)))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
