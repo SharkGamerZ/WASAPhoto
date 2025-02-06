@@ -657,7 +657,6 @@ export default {
 
 .comment:hover .timestamp.own {
 	transform: translateX(-20px);
-
 }
 
 .comment-menu .menu-button:hover {

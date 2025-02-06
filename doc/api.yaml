@@ -271,6 +271,8 @@ paths:
                   identifier:
                     type: string
                     description: identifier of a user
+                    minLength: 1
+                    maxLength: 9999
                     example: "1986290"
 
   /users:
@@ -850,8 +852,21 @@ paths:
       responses:
         "200":
           description: Profile picture changed.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: Profile picture changed.
+
         "401":
-          description: Unauthorized. This is not your profile.
+          description: Unauthorized.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Response string
+                example: Not authorized
         "404": {$ref: "#/components/responses/NotFound"}
 
   /users/{user_id}/followers:

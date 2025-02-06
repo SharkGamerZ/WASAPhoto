@@ -20,6 +20,7 @@ export default {
 			followed: false,
 			followers: 0,
 			followings: 0,
+			posts: 0,
 			photos: [],
 			isFollowing: false,
 			showMenu: false,
@@ -40,7 +41,8 @@ export default {
 			showBans: false,
 			bannedUsers: [],
 			showOthersMenu: false,
-			showBanConfirm: false
+			showBanConfirm: false,
+			isBanned: false // Add this line
 		};
 	},
 	computed: {
@@ -66,6 +68,9 @@ export default {
 				this.posts = response.data.post_num
 			} catch (e) {
 				this.errormsg = e.toString();
+				if (e.response.status === 403) {
+					this.isBanned = true; // Set isBanned to true when response status is 403
+				}
 			}
 			this.loading = false;
 		},
@@ -223,6 +228,9 @@ export default {
 		handlePhotoDeleted(photoID) {
 			// Remove the deleted photo from the photos array
 			this.photos = this.photos.filter(photo => photo.photoID !== photoID);
+
+			this.posts -= 1;
+
 			// Close the photo modal
 			this.closePhotoModal();
 		},
@@ -405,6 +413,17 @@ export default {
 			} finally {
 				this.showBanConfirm = false;
 			}
+		},
+		async unbanUser(userId) {
+			try {
+				const token = localStorage.getItem('token');
+				await this.$axios.delete(`/users/${token}/banned/${userId}`);
+				this.bannedUsers = this.bannedUsers.filter(user => user.user_id !== userId);
+				this.showNotification('User unbanned successfully');
+			} catch (e) {
+				console.error('Error unbanning user:', e);
+				this.showNotification('Failed to unban user', 'error');
+			}
 		}
 	},
 	mounted() {
@@ -417,14 +436,41 @@ export default {
 	},
 	watch: {
 		'$route.params.id': function (newId) {
-			// Checks if user is null
-			if (this.user === null) {
-				return
-			}
-			if (this.$route.fullPath.startsWith('/users/') && newId !== this.user.id) {
-				this.fetchUser(newId);
-				this.fetchPhotos(newId);
-			}
+			// Reset relevant data properties
+			this.user = null;
+			this.errormsg = null;
+			this.loading = false;
+			this.username = '';
+			this.followed = false;
+			this.followers = 0;
+			this.followings = 0;
+			this.posts = 0;
+			this.photos = [];
+			this.isFollowing = false;
+			this.showMenu = false;
+			this.showFollowers = false;
+			this.showFollowing = false;
+			this.followersList = [];
+			this.followingList = [];
+			this.showPropicUpload = false;
+			this.selectedPhotoIndex = null;
+			this.currentComments = [];
+			this.isEditingUsername = false;
+			this.isEditingBio = false;
+			this.editedUsername = '';
+			this.editedBio = '';
+			this.isEditMode = false;
+			this.notification = null;
+			this.notificationTimeout = null;
+			this.showBans = false;
+			this.bannedUsers = [];
+			this.showOthersMenu = false;
+			this.showBanConfirm = false;
+			this.isBanned = false;
+
+			// Fetch new user data
+			this.fetchUser(newId);
+			this.fetchPhotos(newId);
 		}
 	},
 	unmounted() {
@@ -441,7 +487,13 @@ export default {
 <template>
 	<div class="profile-container">
 		<LoadingSpinner v-if="loading" />
-		<ErrorMsg v-if="errormsg" :msg="errormsg" />
+		<div v-if="isBanned" class="banned-message">
+			<p>Sorry, this user banned you</p>
+			<svg class="feather sad-face">
+				<use href="/feather-sprite-v4.29.0.svg#frown" />
+			</svg>
+		</div>
+		<ErrorMsg v-if="errormsg && !isBanned" :msg="errormsg" />
 
 		<div v-if="user" class="user-profile">
 			<div class="user-header">
@@ -1071,6 +1123,24 @@ export default {
 	width: 20px;
 	height: 20px;
 	stroke: #666;
+}
+
+.banned-message {
+	text-align: center;
+	padding: 40px;
+}
+
+.banned-message p {
+	font-size: 24px;
+	font-weight: 600;
+	color: #dc3545;
+}
+
+.banned-message .sad-face {
+	width: 48px;
+	height: 48px;
+	margin-top: 16px;
+	color: #dc3545;
 }
 
 .action-buttons {
